@@ -3,7 +3,7 @@
 	
 	GRIN is short for \emph{Graph Reduction Intermediate Notation}. GRIN consists of an intermediate representation language (IR in the followings) as well as the entire compiler back end framework built around it. GRIN tries to resolve the issues highlighted in Section~\ref{sec:intro} by using interprocedural whole program optimization. 
 	
-	\subsection{General overview}
+	\section{General overview}
 	
 	Interprocedural program analysis is a type of data-flow analysis that propagates information about certain program elements through function calls. Using interprocedural analyses instead of intraprocedural ones, allows for optimizations across functions. This means the framework can handle the issue of large sets of small interconnecting functions presented by the composable programming style. 
 	
@@ -13,7 +13,7 @@
 	
 	% TODO: refer LLVM section
 	
-	\subsection{A small example}
+	\section{A small example}
 	
 	As a brief introduction to the GRIN language, we will show how a small functional program can be encoded in GRIN. We will use the following example program: \pilcode{(add 1) (add 2 3)}. The \pilcode{add} function simply takes two integers, and adds them together. This means, that the program only makes sense in a language that supports partial function application, due to \pilcode{add} being applied only to a single argument. We will also assume, that the language has lazy semantics. We can see the GRIN code generated from the above program in Program code~\ref{code:grin-add}.
 	

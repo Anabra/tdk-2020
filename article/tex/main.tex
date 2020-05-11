@@ -3,6 +3,7 @@
 \usepackage{style}
 \usepackage{subfiles}
 
+%TODO: sec labels to chap labels
 \begin{document}
 	
 	\title{A modern look at GRIN,\\ an optimizing functional language back end\thanks{ The project has been supported by the European Union, co-financed by the European Social Fund (EFOP-3.6.3-VEKOP-16-2017-00002)}}
@@ -24,34 +25,34 @@
 	\maketitle
 	\subfile{abstract}
 	
-	\section{Introduction} \label{sec:intro}
+	\chapter{Introduction} \label{sec:intro}
 	\subfile{introduction}
 	
-	\section{Graph Reduction Intermediate Notation}
+	\chapter{Graph Reduction Intermediate Notation}
 	\subfile{grin}
 	
-	\section{Related Work}
+	\chapter{Related Work}
 	\subfile{related-work}
 	
-	\section{Compiling to LLVM}
+	\chapter{Compiling to LLVM}
 	\subfile{llvm}
 	
-	\section{Dead Code Elimination}
+	\chapter{Dead Code Elimination}
 	\subfile{dce}
 	
-	\section{Dead Data Elimination} \label{sec:dde}
+	\chapter{Dead Data Elimination} \label{sec:dde}
 	\subfile{dde}
 	
-	\section{Idris Front End} \label{sec:idris-front-end}
+	\chapter{Idris Front End} \label{sec:idris-front-end}
 	\subfile{idris-front-end}
 	
-	\section{Results}
+	\chapter{Results}
 	\subfile{results}
 	
-	\section{Future Work} \label{sec:future-work}
+	\chapter{Future Work} \label{sec:future-work}
 	\subfile{future-work}
 	
-	\section{Conclusions}
+	\chapter{Conclusions}
 	\subfile{conclusions}
 		
 	\newpage
