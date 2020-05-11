@@ -1,0 +1,61 @@
+\documentclass[runningheads,a4paper]{report}
+
+\usepackage{style}
+\usepackage{subfiles}
+
+\begin{document}
+	
+	\title{A modern look at GRIN,\\ an optimizing functional language back end\thanks{ The project has been supported by the European Union, co-financed by the European Social Fund (EFOP-3.6.3-VEKOP-16-2017-00002)}}
+	
+	%\institute
+	%{
+	%	\email{\{csaba.hruska, andor.penzes\}@gmail.com}
+	%	\and
+	%	Eötvös Loránd University, Budapest, Hungary\\
+	%	\email{peter.d.podlovics@gmail.com}\\
+	%}
+
+	\date{\today}
+	\author
+	{ 
+		Péter Dávid Podlovics
+	}
+	
+	\maketitle
+	\subfile{abstract}
+	
+	\section{Introduction} \label{sec:intro}
+	\subfile{introduction}
+	
+	\section{Graph Reduction Intermediate Notation}
+	\subfile{grin}
+	
+	\section{Related Work}
+	\subfile{related-work}
+	
+	\section{Compiling to LLVM}
+	\subfile{llvm}
+	
+	\section{Dead Code Elimination}
+	\subfile{dce}
+	
+	\section{Dead Data Elimination} \label{sec:dde}
+	\subfile{dde}
+	
+	\section{Idris Front End} \label{sec:idris-front-end}
+	\subfile{idris-front-end}
+	
+	\section{Results}
+	\subfile{results}
+	
+	\section{Future Work} \label{sec:future-work}
+	\subfile{future-work}
+	
+	\section{Conclusions}
+	\subfile{conclusions}
+		
+	\newpage
+	\subfile{bibliography}
+
+	
+\end{document}
