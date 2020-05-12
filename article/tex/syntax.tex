@@ -1,0 +1,95 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	\section{Syntax of the GRIN IR}
+	
+	\setlength{\grammarparsep}{0.1cm} % increase separation between rules
+	\setlength{\grammarindent}{2.5cm} % increase separation between LHS/RHS 
+	\begin{grammar}
+		<prog> ::= {[} external pure: <external>* {]} \\ 
+		{[} external effectful: <external>* {]} \\
+		{[} ffi pure: <external>* {]} \\
+		{[} ffi effectful: <external>* {]} \\
+		<def>+
+		
+		<external> ::= <name> :: {[} <prim-ty> $\rightarrow$ {]}* <prim-ty>
+		
+		<def> ::= <name> <name>* = <exp>
+	\end{grammar}
+
+	\hspace{-0.7cm}
+	\begin{minipage}{0.5\textwidth}
+		\setlength{\grammarindent}{2.5cm} % increase separation between LHS/RHS 
+		\begin{grammar}
+			
+			<binding> ::= <name> $\leftarrow$ <exp> \\ <binding>
+			\alt <node> @ <name> $\leftarrow$ <pure-var> \\ <binding>
+			\alt <pure-var>
+			
+			<exp> ::= case <name> of <alt>+   
+			\alt <name> <name>*
+			\alt store <name>
+			\alt fetch <name>
+			\alt update <name> <name>
+			\alt pure <val>
+			
+			<alt> ::= <cpat> @ <name> $\rightarrow$ <binding>
+			
+			<cpat> ::= <node>
+			\alt <literal>
+			\alt \#default
+			
+			<pure-var> ::= pure <name>
+			
+			<val> ::= <node> 
+			\alt <name>
+			\alt <literal>
+			\alt \#undefined <type>
+			
+			<node> ::= `(' <tag> <name>* `)'
+			
+			<literal> ::= ? integer literal ?
+			\alt ? unsigned integer literal ?
+			\alt ? floating point literal ?
+			\alt ? boolean literal ?
+			\alt ? string literal ?
+			\alt ? character literal ?
+			\alt `()'
+			
+			<tag> ::= <name>
+			
+			<name> ::= ? identifier ?
+			
+		\end{grammar}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.45\textwidth}
+			\vspace{-1.75cm}
+		\setlength{\grammarindent}{2.75cm} % increase separation between LHS/RHS
+		\begin{grammar}
+			<prim-ty> ::= <con> <prim-ty>*
+			\alt <name>
+			\alt <simple-ty>
+			
+			<type> ::= <nodeset-ty>
+			\alt <simple-ty>
+			
+			<nodeset-ty> ::= `\{' <node-ty>+ `\}'
+			
+			<node-ty> ::= <tag> {`['} <simple-ty>* {`]'}
+	
+			<simple-ty> ::= i64
+			\alt u64
+			\alt float
+			\alt str
+			\alt char
+			\alt bool
+			\alt unit
+			\alt loc `[' <loc>+ `]'
+			\alt \#ptr
+			
+			<con> ::= <name>
+		\end{grammar}
+	\end{minipage}
+	
+\end{document}
