@@ -1,7 +1,7 @@
 \documentclass[main.tex]{subfiles}
 \begin{document}
 	
-	\section{Syntax of the GRIN IR}
+	\section{New Syntax of the GRIN IR}
 	
 	\setlength{\grammarparsep}{0.1cm} % increase separation between rules
 	\setlength{\grammarindent}{2.5cm} % increase separation between LHS/RHS 
@@ -45,6 +45,7 @@
 			\alt <name>
 			\alt <literal>
 			\alt \#undefined <type>
+			\alt `()'
 			
 			<node> ::= `(' <tag> <name>* `)'
 			
@@ -54,7 +55,6 @@
 			\alt ? boolean literal ?
 			\alt ? string literal ?
 			\alt ? character literal ?
-			\alt `()'
 			
 			<tag> ::= <name>
 			

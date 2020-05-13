@@ -15,7 +15,7 @@
 	
 	\section{A small example}
 	
-	As a brief introduction to the GRIN language, we will show how a small functional program can be encoded in GRIN. We will use the following example program: \pilcode{(add 1) (add 2 3)}. The \pilcode{add} function simply takes two integers, and adds them together. This means, that the program only makes sense in a language that supports partial function application, due to \pilcode{add} being applied only to a single argument. We will also assume, that the language has lazy semantics. We can see the GRIN code generated from the above program in Program code~\ref{code:grin-add}.
+	As a brief introduction to the GRIN language, we will show how a small functional program can be encoded in the original GRIN IR. We will use the following example program: \pilcode{(add 1) (add 2 3)}. The \pilcode{add} function simply takes two integers, and adds them together. This means, that the program only makes sense in a language that supports partial function application, due to \pilcode{add} being applied only to a single argument. We will also assume, that the language has lazy semantics. We can see the GRIN code generated from the above program in Program code~\ref{code:grin-add}.
 	
 	\hspace{-0.5cm}
 	\begin{codeFloat}

@@ -26,6 +26,7 @@
 	
 	\maketitle
 	\subfile{abstract}
+	\tableofcontents
 	
 	\chapter{Introduction} \label{sec:intro}
 	\subfile{introduction}
@@ -58,8 +59,13 @@
 	
 	\chapter{Conclusions}
 	\subfile{conclusions}
+	
+	% TODO: remove blank page
+	\appendix
+	\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
+	\chapter{Figures}
+	\subfile{appendices}
 		
-	\newpage
 	\subfile{bibliography}
 
 	
