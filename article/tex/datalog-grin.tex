@@ -1,0 +1,385 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+
+  In this chapter we present a logic-based representation of the GRIN IR, as well as the formalization of the created-by and liveness dataflow analyses.
+
+  \section{Datalog model of GRIN}
+
+  \section{A simple analysis example}
+
+  \begin{figure}
+    \begin{mathpar}
+      \InferRule{\Store{v}{i}}
+                {\Heap{v}{i}}
+                {H-1}
+      \and
+      \InferRule{\Update{\any}{p}{val} \\\\
+                \CreatedBy{p}{p'} \\\\
+                \Heap{p'}{\any}}
+                {\Heap{p'}{val}}
+                {H-2}
+    \end{mathpar}
+
+  \caption{Rules of the Heap analysis}
+  \end{figure}
+
+
+  \section{Created-by analysis}
+
+  \begin{figure}
+    \begin{mathpar}
+    \InferRule{\LitAssign{v}{\any}{\any}}
+              {\CreatedBy{v}{v}}
+              {CBy-1}
+    \and
+    \InferRule{\Node{n}{\any}}
+              {\CreatedBy{n}{n}}
+              {CBy-2}
+    \and
+    \InferRule{\Store{p}{\any}}
+              {\CreatedBy{p}{p}}
+              {CBy-3}
+    \and
+    \InferRule{\Update{v}{\any}{\any}}
+              {\CreatedBy{v}{v}}
+              {CBy-4}
+    \and
+    \InferRule{\LitAssign{v}{\any}{\any}}
+              {\CreatedBy{v}{v}}
+              {CBy-5}
+    \end{mathpar}
+  \caption{Simple rules of the CreatedBy analysis}
+  \end{figure}
+
+  \begin{figure}
+    \begin{mathpar}
+    \InferRule{\Move{v}{n} \\\\
+                \CreatedBy{n}{n'}}
+                {\CreatedBy{v}{n'}}
+                {CBy-6}
+		\and
+		\InferRule{\FunctionParameter{\any}{\any}{p} \\\\
+							\CreatedBy{v_1}{p} \\\\
+							\CreatedBy{p}{v_2}}
+							{\CreatedBy{v_1}{v_2}}
+							{CBy-7}
+		\and
+		\DatalogRule{\CreatedBy{v}{n'}}
+								{\Fetch{v}{p} \\\\
+									\CreatedBy{p}{p'} \\\\
+									\Heap{p'}{n} \\\\
+									\CreatedBy{n}{n'}}
+									{CBy-8}
+		\and
+		\DatalogRule{\CreatedBy{x}{arg'}}
+								{\CallArgument{r}{i}{arg} \\\\
+								\Call{r}{f} \\\\
+								\FunctionParameter{f}{i}{x} \\\\
+								\CreatedBy{arg}{arg'}}
+								{CBy-9}
+		\and
+		\DatalogRule{\CreatedBy{r}{v'}}
+								{\Call{r}{f} \\\\
+								\ReturnValue{f}{v} \\\\
+								\CreatedBy{v}{v'}}
+								{CBy-10}
+		%TODO: NodeCreatedBy
+		\and
+		\DatalogRule{\CreatedBy{u}{arg'}}
+								{\NodePattern{v}{tag}{n} \\\\
+								\NodeParameter{v}{i}{u} \\\\
+								\CreatedBy{n}{n'} \\\\
+								\Node{n'}{tag} \\\\
+								\NodeArgument{n'}{i}{arg} \\\\
+								\CreatedBy{arg}{arg'}}
+								{CBy-11}
+		\and
+		\DatalogRule{\CreatedBy{v}{n'}}
+								{\NodePattern{v}{\any}{n} \\\\
+								\CreatedBy{n}{n'}}
+								{CBy-12}
+    \end{mathpar}
+  \caption{Some recursive rules of the CreatedBy analysis}
+  \end{figure}
+
+  \begin{figure}
+    	\begin{mathpar}
+      \DatalogRule{\CreatedBy{alt}{scrut'}}
+                  {\Case{r}{scrut} \\\\
+                  \AltLiteral{r}{alt}{\any} \\\\
+                  \CreatedBy{scrut}{scrut'}}
+                  {CBy-13}
+      \and
+      \DatalogRule{\CreatedBy{alt}{scrut'}}
+                  {\Case{r}{scrut} \\\\
+                  \AltLiteral{r}{alt}{tag} \\\\
+                  \CreatedBy{scrut}{scrut'} \\\\
+                  \Node{scrut'}{tag}}
+                  {CBy-14}
+      \and
+      \DatalogRule{\CreatedBy{alt}{scrut'}}
+                  {\Case{r}{scrut} \\\\
+                  \AltDefault{r}{alt} \\\\
+                  \CreatedBy{scrut}{scrut'}}
+                  {CBy-15}
+      \and
+      % TODO: shorter name for altParam
+      % TODO: shorter name for nodeArg
+      % TODO: PossibleAlt
+      \DatalogRule{\CreatedBy{altParam}{nodeArg'}}
+                  {\Case{r}{scrut} \\\\
+                  \Alt{r}{\any}{tag} \\\\
+                  \AltParameter{r}{tag}{i}{altParam} \\\\
+                  \CreatedBy{scrut}{scrut'} \\\\
+                  \Node{scrut'}{tag} \\\\
+                  \NodeArgument{scrut'}{i}{nodeArg} \\\\
+                  \CreatedBy{nodeArg}{nodeArg'}}
+                  {CBy-16}
+      \and
+      \DatalogRule{\CreatedBy{r}{v'}}
+                  {\Case{r}{scrut} \\\\
+                  \Alt{r}{alt}{tag} \\\\
+                  \CreatedBy{scrut}{scrut'} \\\\
+                  \Node{scrut'}{tag} \\\\
+                  \ReturnValue{alt}{v} \\\\
+                  \CreatedBy{v}{v'}}
+                  {CBy-17}
+      % TODO: maybe OR?
+      \and
+      \DatalogRule{\CreatedBy{r}{v'}}
+                  {\Case{r}{\any} \\\\
+                  \AltLiteral{r}{alt}{\any} \\\\
+                  \ReturnValue{alt}{v} \\\\
+                  \CreatedBy{v}{v'}}
+                  {CBy-18}
+      \and
+      \DatalogRule{\CreatedBy{r}{v'}}
+                  {\Case{r}{\any} \\\\
+                  \AltDefault{r}{alt} \\\\
+                  \ReturnValue{alt}{v} \\\\
+                  \CreatedBy{v}{v'}}
+                  {CBy-19}
+    \end{mathpar}
+  \caption{Case-related rules of the CreatedBy analysis}
+  \end{figure}
+
+  \section{Liveness analysis}
+
+  \begin{figure}
+
+    \begin{mathpar}
+		\DatalogRule{\NodeCreatedBy{n}{t}{n'}}
+								{\Node{n'}{t} \\\\
+								\CreatedBy{v}{v'}}
+								{NCBy}
+		\and
+		\DatalogRule{\PossibleNodeTag{n}{t}}
+								{\NodeCreatedBy{n}{t}{\any}}
+								{PNT}
+		\and
+		\DatalogRule{\PossibleAlt{alt}}
+								{\AltDefault{\any}{alt}}
+								{PA-1}
+		\and
+		\DatalogRule{\PossibleAlt{alt}}
+								{\AltLiteral{\any}{alt}{\any}}
+								{PA-2}
+		\and
+		\DatalogRule{\PossibleAlt{alt}}
+								{\Case{r}{scrut} \\\\
+								\Alt{r}{alt}{t} \\\\
+								\NodeCreatedBy{scrut}{t}{scrut'}}
+								{PA-3}
+		\and
+		\DatalogRule{\PointerOrigin{p}{q}}
+								{\Store{q}{\any} \\\\
+								\CreatedBy{p}{q}}
+								{PO}
+		\and
+		\DatalogRule{\PossibleLocTag{p}{t}}
+								{\Heap{p}{n} \\\\
+								\PossibleNodeTag{n}{tag}}
+								{PLT}
+	  \end{mathpar}
+  \caption{Helper relations}
+  \end{figure}
+
+  \begin{figure}
+    	\begin{mathpar}
+      \DatalogRule{\LiveSVal{x}}
+                  {\EntryPoint{main} \\\\
+                  \ReturnValue{main}{x}}
+                  {LS-1}
+      \and
+      \DatalogRule{\LiveSVal{x}}
+                  {\Call{y}{f} \\\\
+                  \CallArgument{y}{\any}{x} \\\\
+                  \External{f}{true}{\any}}
+                  {LS-2}
+      \and
+      \DatalogRule{\LiveSVal{x}}
+              {\LiveSVal{y} \\\\
+              \Move{y}{x}}
+              {LS-3}
+      \and
+      % TODO: alt helper relation
+      \DatalogRule{\LiveSVal{ret}}
+                  {\LiveSVal{res} \\ \PossibleAlt{alt} \\ \ReturnValue{alt}{ret} \\\\
+                  (\Alt{res}{alt}{\any} \lor \AltLiteral{res}{alt}{\any} \lor \AltDefault{res}{alt})}
+                  {LS-4}
+      \and
+      \DatalogRule{\LiveSVal{scrut}}
+                  {\LiveSVal{alt} \\ \PossibleAlt{alt} \\ \Case{res}{scrut} \\\\
+                  (\Alt{res}{alt}{\any} \lor \AltLiteral{res}{alt}{\any} \lor \AltDefault{res}{alt})}
+                  {LS-5}
+      \and
+      \DatalogRule{\LiveFunRetSimple{f}}
+                  {\LiveSVal{y} \\\\
+                  \Call{y}{f}}
+                  {LFS-3}
+      \and
+      \DatalogRule{\LiveSVal{ret}}
+                  {\LiveFunRetSimple{f} \\\\
+                  \ReturnValue{f}{ret}}
+                  {LS-6}
+      \and
+      \DatalogRule{\LiveSVal{x}}
+                  {\LiveSVal{param} \\\\
+                  \FunctionParameter{f}{i}{param} \\\\
+                  \Call{y}{f} \\\\
+                  \CallArgument{y}{i}{x}}
+                  {LS-7}
+      \and
+      \DatalogRule{\LiveSVal{x}}
+                  {\LiveFunRetSimple{f_{ext}} \\\\
+                  \External{f_{ext}}{\any}{\any} \\\\
+                  \Call{y}{f_{ext}} \\\\
+                  \CallArgument{y}{\any}{x}}
+                  {LS-8}
+      \and
+      \DatalogRule{\LiveSVal{x}}
+                  {\LiveNodeArg{n}{t}{i} \\\\
+                  \Node{n}{t} \\\\
+                  \NodeArgument{n}{i}{x}}
+                  {LS-9}
+	  \end{mathpar}
+  \caption{Liveness rules for simple values}
+  \end{figure}
+
+  \begin{figure}
+    \begin{mathpar}
+    \DatalogRule{\LiveNodeArg{n}{t}{i}}
+								{\LiveSVal{x} \\\\
+								\NodeParameter{as}{i}{x} \\\\
+								\NodePattern{as}{t}{n}}
+								{LNA-1}
+		\and
+		\DatalogRule{\LiveNodeArg{n}{t}{i}}
+								{\LiveNodeArg{as}{t}{i} \\\\
+								\NodePattern{as}{t}{n}}
+								{LNA-2}
+		\and
+		\DatalogRule{\LiveNodeArg{n}{t}{i}}
+								{\LiveSVal(x) \\\\
+								\NodePattern{as}{t}{n} \\\\
+								\NodeParameter{as}{i}{x}}
+								{LNA-3}
+		\and
+		\DatalogRule{\LiveNodeArg{m}{t}{i}}
+								{\LiveNodeArg{n}{t}{i} \\\\
+								\Move{n}{m}}
+								{LNA-4}
+    \end{mathpar}
+  \caption{Liveness rules for node values}
+  \end{figure}
+
+  \begin{figure}
+    \begin{mathpar}
+    \DatalogRule{\LiveNodeArg{scrut}{t}{i}}
+								{\LiveNodeArg{alt}{t}{i} \\\\
+								\Case{r}{scrut} \\\\
+								\Alt{r}{alt}{t} \\\\
+								\AltParameter{r}{t}{i}{\any}}
+								{LNA-5}
+		\and
+		\DatalogRule{\LiveNodeArg{scrut}{t}{i}}
+								{\LiveSVal{x} \\\\
+								\Case{r}{scrut} \\\\
+								\AltParameter{r}{t}{i}{x}}
+								{LNA-6}
+		\and
+		% TODO: maybe NodeCreatedBy?
+		\DatalogRule{\LiveNodeArg{ret}{t_{res}}{i}}
+								{\LiveNodeArg{res}{t_{res}}{i} \\\\
+								\Case{res}{scrut} \\\\
+								\Alt{res}{alt}{t_{alt}} \\\\
+								\ReturnValue{alt}{ret} \\\\
+								\PossibleAlt{alt} \\\\
+								\CreatedBy{ret}{ret'} \\\\
+								\Node{ret'}{t_{res}}}
+								{LNA-7}
+		\and
+		% TODO: maybe NodeCreatedBy?
+		\DatalogRule{\LiveNodeArg{ret}{t_{res}}{i}}
+								{\LiveNodeArg{res}{t_{res}}{i} \\\\
+								\Case{res}{\any} \\\\
+								(\AltLiteral{res}{alt}{\any} \lor \AltDefault{res}{alt}) \\\\
+								\ReturnValue{alt}{ret} \\\\
+								\CreatedBy{ret}{ret'} \\\\
+								\Node{ret'}{t_{res}}}
+								{LNA-8}
+    \end{mathpar}
+  \caption{Liveness rules for case expressions}
+  \end{figure}
+
+  \begin{figure}
+    \begin{mathpar}
+    \DatalogRule{\LiveFunRetNodeArg{f}{t}{i}}
+								{\LiveNodeArg{y}{t}{i} \\\\
+								\Call{y}{f}}
+								{LFN}
+		\and
+		\DatalogRule{\LiveNodeArg{r}{t}{i}}
+								{\LiveFunRetNodeArg{f}{t}{i} \\\\
+								\ReturnValue{f}{r}}
+								{LNA-9}
+		\and
+		\DatalogRule{\LiveNodeArg{x}{t}{i}}
+								{\LiveNodeArg{param}{t}{i} \\\\
+								\FunctionParameter{f}{j}{param} \\\\
+								\Call{y}{f} \\\\
+								\CallArgument{y}{j}{x}}
+								{LNA-10}
+    \end{mathpar}
+  \caption{Liveness rules for functions}
+  \end{figure}
+
+  \begin{figure}
+    \begin{mathpar}
+    \DatalogRule{\LiveHeapNodeArg{q}{t}{i}}
+								{\LiveNodeArg{n}{t}{i} \\\\
+								\Fetch{n}{p} \\\\
+								\PointerOrigin{p}{q} \\\\
+								\PossibleLocTag{q}{t}}
+								{LHN}
+		\and
+		\DatalogRule{\LiveNodeArg{n}{t}{i}}
+								{\LiveHeapNodeArg{p}{t}{i} \\\\
+								\Store{q}{n} \\\\
+								\PointerOrigin{p}{q} \\\\
+								\PossibleNodeTag{n}{t}}
+								{LNA-11}
+		\and
+		\DatalogRule{\LiveNodeArg{n}{t}{i}}
+								{\LiveHeapNodeArg{q}{t}{i} \\\\
+								\Update{\any}{p}{n} \\\\
+								\PointerOrigin{p}{q} \\\\
+								\PossibleNodeTag{n}{t}}
+								{LNA-12}
+    \end{mathpar}
+  \caption{Liveness rules for heap operations}
+  \end{figure}
+
+
+
+\end{document}

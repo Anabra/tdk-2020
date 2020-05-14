@@ -50,7 +50,12 @@
 	
 	Dead data elimination requires a considerable amount of data-flow analyses and possibly multiple transformation passes. First of all, it has to identify potentially removable dead fields of a node. This information can be acquired by running liveness analysis on the program (see Section~\ref{sub-sec:lva}). After that, it has to connect producers with consumers by running the \emph{created-by data-flow analysis}. Then it has to group producers together sharing at least one common consumer, and determine whether a given field for a given producer can be removed globally, or just dummified locally. Finally, it has to transform both the producers and the consumers.
 	
-	\subsection{Created-by analysis}
+	\section{Dead data elimination phases}
+	
+	In this section, we will go through each phase of the dead data elimination transformation, as well as the required analysis results.
+	
+	% TODO: rephrase
+	\subsection{Created-by analysis result}
 	
 	The created-by analysis, as its name suggests is responsible for determining the set of producers a given variable-was possibly created by. For our purposes, it is sufficient to track only node valued variables, since these are the only potential candidates for dead data elimination. Analysis~example~\ref{analysis:cby} demonstrates how the algorithm works on a simple program.
 	

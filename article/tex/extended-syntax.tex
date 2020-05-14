@@ -1,0 +1,80 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+
+  In this chapter we present our first contribution, a new syntactical structure for the GRIN IR.
+
+  \section{Motivation}
+
+  \section{Extended syntax}
+  
+	\subfile{syntax}
+
+  \section{The small example revisited}
+
+  \hspace{-0.5cm}
+  \begin{codeFloat}
+    \begin{minipage}{0.48\textwidth}
+      \begin{haskell}
+        grinMain =
+          k1 <- pure 1
+          n1 <- pure (CInt k1)
+          a  <- %\textcolor{identifierColor}{store}% n1
+          k2 <- pure 2
+          n2 <- pure (CInt k2)
+          b  <- %\textcolor{identifierColor}{store}% n2
+          k3 <- pure 3
+          n3 <- pure (CInt k3)
+          c  <- %\textcolor{identifierColor}{store}% n3
+
+          n4  <- pure (FAdd b c)
+          r   <- %\textcolor{identifierColor}{store}% n4
+          n5  <- pure (P1_add a)
+          suc <- pure n5
+          _1  <- apply suc r
+
+        add x y =
+          x' <- eval x
+          (CInt x1) @ _2 <- pure x'
+          y' <- eval y
+          (CInt y1) @ _3 <- pure y'
+          add.r <- _prim_int_add x1 y1
+          n6 <- pure (CInt add.r)
+          pure n6
+      \end{haskell}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.50\textwidth}
+      \begin{haskellNum}{12}
+       eval p =
+         v <- %\textcolor{identifierColor}{fetch}% p
+         eval.r <- case v of
+           (CInt _n) @ alt1 ->
+              pure v
+           (P2_add) @ alt2 ->
+              pure v
+           (P1_add _x) @ alt3 ->
+              pure v
+           (Fadd x2 y2) @ alt4 ->
+             r_add <- add x2 y2
+             _4 <- %\textcolor{identifierColor}{update}% p r_add
+             pure r_add
+         pure eval.r
+
+
+       apply f u =
+         apply.r <- case f of
+           (P2_add) @ alt5 ->
+             f' <- pure (P1_add u)
+             pure f'
+           (P1_add z) @ alt6 ->
+             res <- add z u
+             pure res
+         pure apply.r
+      \end{haskellNum}
+    \end{minipage}
+    \caption{Extended GRIN code generated from \pilcode{(add 1) (add 2 3)}}
+    \label{code:grin-add-es}
+
+  \end{codeFloat}
+
+\end{document}

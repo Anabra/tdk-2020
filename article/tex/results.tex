@@ -8,11 +8,11 @@
 	%TODO: include code of Length
 	The measurements were taken using the Idris front end and LLVM back end of the compiler. Each test program --- besides ``Length" --- was adopted from the book \textit{Type-driven development with Idris}~\cite{tdd-idris} by Edwin Brady. These are small Idris programs demonstrating a certain aspect of the language.
 	
-	``Length" is an Idris program, calculating the length of a list containing the natural numbers from 1 to 100. This example was mainly constructed to test how the dead data elimination pass can transform the inner structure of a list into a simple natural number (see Section~\ref{sec:dde}).
+	``Length" is an Idris program, calculating the length of a list containing the natural numbers from 1 to 100. This example was mainly constructed to test how the dead data elimination pass can transform the inner structure of a list into a simple natural number (see Chapter~\ref{sec:dde}).
 	
 	\section{Measured metrics}
 	
-	Each test program went through the compilation pipeline described in Section~\ref{sec:idris-front-end}, and measurements were taken at certain points during the compilation. The programs were subject to three different types of measurements.
+	Each test program went through the compilation pipeline described in Section~\ref{sec:idris-optimizer}, and measurements were taken at certain points during the compilation. The programs were subject to three different types of measurements.
 	
 	\vspace{0.25cm}
 	\begin{itemize}
@@ -89,7 +89,7 @@
 
 	The runtime statistics for the executed binary are particularly interesting. First, observing the \pilcode{O0} statistics, we can see that the regular optimizations substantially reduced the number of executed instructions and memory operations, just as we saw with the interpreted GRIN code. Also, it is interesting to see that the DDE optimized binary did not perform any better than the regularly optimized one;  however, its size decreased by more than 20\%. 
 	
-	We can also notice the huge memory usage difference between the Idris program and the GRIN programs that were only optimized by LLVM but not by GRIN. This because the rather simple code generation scheme of the Idris front end as discussed in \ref{subsec:idris-front-end}. However, after running the optimizations, the optimized GRIN programs consume considerably less memory, and have better execution times as well.
+	We can also notice the huge memory usage difference between the Idris program and the GRIN programs that were only optimized by LLVM but not by GRIN. This because the rather simple code generation scheme of the Idris front end as discussed in Section~\ref{sec:idris-front-end}. However, after running the optimizations, the optimized GRIN programs consume considerably less memory, and have better execution times as well.
 	
 	\begin{center}
 		\begin{minipage}{\linewidth}

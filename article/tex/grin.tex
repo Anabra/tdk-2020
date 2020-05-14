@@ -1,7 +1,7 @@
 \documentclass[main.tex]{subfiles}
 \begin{document}
 	
-	GRIN is short for \emph{Graph Reduction Intermediate Notation}. GRIN consists of an intermediate representation language (IR in the followings) as well as the entire compiler back end framework built around it. GRIN tries to resolve the issues highlighted in Section~\ref{sec:intro} by using interprocedural whole program optimization. 
+	GRIN is short for \emph{Graph Reduction Intermediate Notation}. GRIN consists of an intermediate representation language (IR in the followings) as well as the entire compiler back end framework built around it. GRIN tries to resolve the issues highlighted in Chapter~\ref{chap:intro} by using interprocedural whole program optimization. 
 	
 	\section{General overview}
 	
@@ -33,8 +33,8 @@
 	      add x y =
 	        (CInt x1) <- eval x
 	        (CInt y1) <- eval y
-	        r <- _prim_int_add x1 y1
-	        pure (CInt r)
+	        add.r <- _prim_int_add x1 y1
+	        pure (CInt add.r)
 			\end{haskell}
 		\end{minipage}
 		\hfill

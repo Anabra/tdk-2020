@@ -1,4 +1,4 @@
-\documentclass[runningheads,a4paper]{report}
+\documentclass[a4paper]{report}
 
 \usepackage{style}
 \usepackage{subfiles}
@@ -28,36 +28,37 @@
 	\subfile{abstract}
 	\tableofcontents
 	
-	\chapter{Introduction} \label{sec:intro}
+	\chapter{Introduction} \label{chap:intro}
 	\subfile{introduction}
 	
-	\chapter{Graph Reduction Intermediate Notation}
+	\chapter{Graph Reduction Intermediate Notation} \label{chap:grin}
 	\subfile{grin}
-	\subfile{syntax}
 	
-	\chapter{Related Work}
-	\subfile{related-work}
+	\chapter{Syntactical extensions} \label{chap:extended-syntax}
+	\subfile{extended-syntax}
 	
-	\chapter{Compiling to LLVM}
-	\subfile{llvm}
+	\chapter{Datalog for GRIN} \label{chap:datalog-grin}
+	\subfile{datalog-grin}
 	
-	\chapter{Dead Code Elimination}
+	\chapter{Dead Code Elimination} \label{chap:dce}
 	\subfile{dce}
-	\subfile{lva}
 	
-	\chapter{Dead Data Elimination} \label{sec:dde}
-	\subfile{dde}
-	
-	\chapter{Idris Front End} \label{sec:idris-front-end}
+	\chapter{Idris Front End} \label{chap:idris-front-end}
 	\subfile{idris-front-end}
 	
-	\chapter{Results}
+	\chapter{LLVM Back End} \label{chap:llvm}
+	\subfile{llvm}
+	
+	\chapter{Results} \label{chap:results}
 	\subfile{results}
 	
-	\chapter{Future Work} \label{sec:future-work}
+	\chapter{Related Work} \label{chap:related-work}
+	\subfile{related-work}
+	
+	\chapter{Future Work} \label{chap:future-work}
 	\subfile{future-work}
 	
-	\chapter{Conclusions}
+	\chapter{Conclusions} \label{chap:conclusions}
 	\subfile{conclusions}
 	
 	% TODO: remove blank page
