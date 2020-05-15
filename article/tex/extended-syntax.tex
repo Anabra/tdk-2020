@@ -1,20 +1,93 @@
 \documentclass[main.tex]{subfiles}
 \begin{document}
 
-  In this chapter we present our first contribution, a new syntactical structure for the GRIN IR.
+  In this chapter we present our first contribution, a new syntactical structure for the GRIN IR. First, we explain the driving motivation behind the syntactical extensions, then formally define the new syntax, and finally illustrate the changes through an example.
 
+	% TODO: maybe mention performance
   \section{Motivation}
 
+  There are many advantages to having a simple syntax for an intermediate representation. For example it is easier to compile other languages \emph{to the IR}, as well as it is easier to generate machine code \emph{from the IR}.
+  That being said, the main motivation behind the syntactical restructuring is to facilitate the definition and implementation of complex data-flow analyses and program transformations for the GRIN IR. Currently, it is somewhat inconvenient to define such analyses and transformations due to the diverse structure of the language. For instance, the original syntax specification (see Figure~\ref{fig:grin-syntax-old}) allows six different syntactical objects for the scrutinee of a case expression, and just as many for the pattern of a binding. This can considerably complicate the implementation of more complex analyses and transformations.
+
+  However, the most significant problem is that certain program points cannot be uniquely identified. This is a major concern, since this not only makes the implementation of certain data-flow analyses inconvenient, but outright eliminates an entire class of logic defined program analyses. This is because logic-based analyses require a declarative, relation-based model of the input program (see Section~\ref{sec:datalog-model}). This means, every intermediate value must be addressable by a unique name. This is not possible with original syntax specification of GRIN.
+
   \section{Extended syntax}
+
+  As mentioned earlier, the original syntax of GRIN allows for arguably too much diversity, as well as makes it possible to generate such code where certain intermediate values are not addressable by a unique identifier. Fortunately, solving the first problem also makes it easier to solve the second one, since the less diverse the syntax is, the less likely it is to have unidentifiable intermediate values.
+
+  Making sure that each intermediate value is identifiable is one part of the problem, but we would also like to make the identifiers visible in the program. That is guaranteeing every program point can be referenced by an explicit name. This design choice is motivated by the fact that it is significantly easier to work with an intermediate language where each value has a human-readable and visible name.
   
+  The new syntax specification can be seen in Figure~\ref{fig:syntax-new}.
+
+  \subsection{Replacing values with names}
+
+  In the original syntax, values can appear in binding patterns, case scrutinees, and in \pilcode{store} and \pilcode{update} arguments. For function calls and node values the situation is a bit better, since only simple values are allowed as call and node arguments.
+
+  Our first proposed change is to replace all these values with variable names. That is, only variable names can appear in binding patterns, case expression scrutinees, \pilcode{store} and \pilcode{update} arguments, as well as function call and node value arguments.
+
+  This restriction reduces diversity, and brings us a step closer to easier intermediate value identification.
+
+  \subsection{Introducing @patterns}
+
+  Now that we have removed the possibility of pattern matching on the result of a binding (now only a variable can be the pattern), we have figure out a way of translating the old pattern matching construct into the new syntax. The first idea that might come to one's mind is to just use case expressions for pattern matching. This is an acceptable solution, however besides simplicity of the language, we should also keep in mind the semantic separation of syntactical constructs as well as the readability of the IR. Case expressions are used to define branching points in control-flow, and binding patterns would always have only a single branch. Furthermore, we would like to avoid nesting code many levels deep in case expressions which would hamper readability.
+
+  Instead we introduce a new syntactical construct, @patterns (read as: "as patters"). As-patterns allow for bindings to have node-valued patterns, meanwhile also guaranteeing that the binding has a unique name. The structure is as follows: \pilcode{<node-pat> @ <var> <- <binding>}.
+
+  @patterns combine the flexibility of value patterns with the rigidness of the naming convention. By removing value patterns from the language, and introducing @patterns, we could achieve the same expressive power as before, meanwhile making sure that everything can be referenced by an explicit name. Note that unlike the @pattern in Haskell, here the variable name and the pattern are swapped. This is to keep the syntax consistent with named case alternatives (see Subsection~\ref{subsec:named-alts}). Furthermore, we restrict the available patterns only to nodes. Currently literals and unit are allowed. To pattern match on literals the case expression can be used.
+
+  \subsection{Naming case alternatives} \label{subsec:named-alts}
+
+  To model the GRIN AST in Datalog, each syntactic construct must have an identifier. Currently, the alternatives in case expression don't have unique identifiers. We can solve this issue by naming each alternative. The syntax would be similar to that of the @patterns, where the pattern comes before the alternative's name. This is to improve the readability of the code: with long variable names, the patterns can get lost. Alternative names should also obey the static single assignment property of the language, meanwhile also being globally unique (not just in the scope of a single case expression).
+
+  \hspace{-0.5cm}
+  \begin{codeFloat}[h]
+  	\centering
+    \begin{minipage}{0.42\textwidth}
+      \begin{haskell}
+      case v of
+        (CNil)       @ v1 -> <code>
+        (CCons x xs) @ v2 -> <code>
+      \end{haskell}
+    \end{minipage}
+  \caption{Named case alternatives}
+  \label{code:named-alt}
+  \end{codeFloat}
+
+  The names of the case alternatives would be the scrutinee restricted to the given alternative. For example, in the above example, we would know that \pilcode{v1} must be a node constructed with the \pilcode{CNil} tag. Similarly, \pilcode{v2} is also a node, but is constructed with the `CCons` tag.
+
+  Named alternatives would make dataflow more explicit for case expressions. Currently, the analyses restrict the scrutinee when they are interpreting a given alternative (they are path sensitive), but with these changes, that kind of dataflow would be made more visible.
+  
+  \subsection{Restricting bindings and @patterns}
+  
+  To reduce diversity even further, we impose structural restrictions on @patterns and binding sequences. Firstly, the right-hand side of an @pattern binding can only be of the form \pilcode{pure <var>}. Secondly, the same restriction holds for the last expression of a binding a chain. This is to simplify @patterns and to have an explicit return value for functions, and case alternatives.
+  
+  \subsection{Removing low level constructs}
+  
+  The original GRIN IR contained some low level constructs such as tag values, tag patterns and indexed fetches. They were used to facilitate the RISC code generation process. Since then, GRIN transitioned to a more modern back end (see Chapter~\ref{chap:llvm}), and over the years these constructs proved to be unnecessary.
+  
+  \subsection{Adding external declarations}
+  
+  It is a future goal to support user-defined external operations. The first step towards this goal is to syntactically support the declaration of custom external function. To support this, the syntax of the IR is extended with an external header where the user can list their own external functions alongside with their type signatures.
+  
+  \subsection{Extending the values with \pilcode{undefined}}
+  
+  The current value set will have to extended with the \pilcode{undefined} value to enable the implementation of the dead data elimination transformation (see Subsection~\ref{subsec:undefined}). Furthermore, the \pilcode{undefined} value also requires an explicit type annotation, so the syntax is extended with the necessary components.
+
 	\subfile{syntax}
 
   \section{The small example revisited}
+  
+  This section illustrates the syntactical changes through a small example. In Program~Code~\ref{code:grin-add-es} we can see how Program~Code~\ref{code:grin-add} was transformed from the original syntax to the new one.
+
+	As we can see, the resulting program is more verbose than the original, and it has way more names in it. In this program, every intermediate value and each program point can be reference by an explicit names. Each binding has a unique name, the variable it is bound to; each alternative has a unique name, each argument has a unique name; and every alternative and function ends with returning a variable.
 
   \hspace{-0.5cm}
   \begin{codeFloat}
     \begin{minipage}{0.48\textwidth}
       \begin{haskell}
+        primop pure:
+          prim_int_add :: i64 -> i64 -> i64
+
         grinMain =
           k1 <- pure 1
           n1 <- pure (CInt k1)
@@ -30,36 +103,36 @@
           r   <- %\textcolor{identifierColor}{store}% n4
           n5  <- pure (P1_add a)
           suc <- pure n5
-          _1  <- apply suc r
+          res <- apply suc r
+          pure res
 
         add x y =
           x' <- eval x
-          (CInt x1) @ _2 <- pure x'
+          (CInt x1) @ _1 <- pure x'
           y' <- eval y
-          (CInt y1) @ _3 <- pure y'
-          add.r <- _prim_int_add x1 y1
+          (CInt y1) @ _2 <- pure y'
+          add.r <- prim_int_add x1 y1
           n6 <- pure (CInt add.r)
           pure n6
       \end{haskell}
     \end{minipage}
     \hfill
-    \begin{minipage}{0.50\textwidth}
-      \begin{haskellNum}{12}
+    \begin{minipage}{0.44\textwidth}
+      \begin{haskellNum}{30}
        eval p =
          v <- %\textcolor{identifierColor}{fetch}% p
          eval.r <- case v of
            (CInt _n) @ alt1 ->
-              pure v
+              pure alt1
            (P2_add) @ alt2 ->
-              pure v
+              pure alt2
            (P1_add _x) @ alt3 ->
-              pure v
+              pure alt3
            (Fadd x2 y2) @ alt4 ->
              r_add <- add x2 y2
-             _4 <- %\textcolor{identifierColor}{update}% p r_add
+             _3 <- %\textcolor{identifierColor}{update}% p r_add
              pure r_add
          pure eval.r
-
 
        apply f u =
          apply.r <- case f of
@@ -74,7 +147,6 @@
     \end{minipage}
     \caption{Extended GRIN code generated from \pilcode{(add 1) (add 2 3)}}
     \label{code:grin-add-es}
-
   \end{codeFloat}
 
 \end{document}

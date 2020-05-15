@@ -1,0 +1,97 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+
+  \hspace{-0.5cm}
+  \begin{codeFloat}
+    \begin{minipage}{0.48\textwidth}
+      \begin{haskell}
+        // externals
+        External(prim_int_add, 0, Int64, primop)
+        ExternalParam(prim_int_add, 0, Int64)
+        ExternalParam(prim_int_add, 1, Int64)
+
+        // grin main
+        EntryPoint(grinMain)
+
+        LitAssign(k1, Int64, 1)
+        NodeArgument(n1, 0, k1)
+        Node(n1, CInt)
+        Store(a, n1)
+
+        <...>
+
+        Node(n4, FAdd)
+        NodeArgument(n4, 0, b)
+        NodeArgument(n4, 1, c)
+
+        Node(n5, P1_add)
+        NodeArgument(n5, 0, a)
+        Store(r, n4)
+        Move(suc, n5)
+
+        Call(res, apply)
+        CallArgument(res, 0, suc)
+        CallArgument(res, 1, r)
+
+        ReturnValue(grinMain, res)
+
+        // add x y
+        FunctionParameter(add, 0, x)
+        FunctionParameter(add, 1, y)
+
+        Call(x', eval)
+        CallArgument(x', 0, x)
+        NodePattern(_1, CInt, x')
+        NodeParameter(_1, 0, x1)
+
+        <...>
+
+        Call(add.r, prim_int_add)
+        CallArgument(add.r, 0, x1)
+        CallArgument(add.r, 1, y1)
+
+        Node(n6, CInt)
+        NodeArgument(n6, 0, add.r)
+        ReturnValue(add, n6)
+
+
+      \end{haskell}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.44\textwidth}
+      \begin{haskellNum}{30}
+      // eval p
+      FunctionParameter(eval, 0, p)
+
+      Fetch(v, p)
+      Case(eval.r, v)
+
+      Alt(eval.r, alt1, CInt)
+      AltParameter(eval.r, CInt, 0, _n)
+      ReturnValue(alt1, alt1)
+
+      Alt(eval.r, alt2, P2_add)
+      ReturnValue(alt2, alt2)
+
+      Alt(eval.r, alt3, P1_add)
+      AltParameter(eval.r, P1_add, 0, _x)
+      ReturnValue(alt3, alt3)
+
+      Alt(eval.r, alt4, Fadd)
+      AltParameter(eval.r, Fadd, 0, x2)
+      AltParameter(eval.r, Fadd, 1, y2)
+      Call(r_add, add)
+      CallArgument(r_add, 0, x2)
+      CallArgument(r_add, 1, y2)
+      Update(_3, p, r_add)
+      ReturnValue(alt4, r_add)
+
+      ReturnValue(eval, eval.r)
+
+      \end{haskellNum}
+    \end{minipage}
+    \caption{Datalog model of GRIN code generated from \pilcode{(add 1) (add 2 3)}}
+    \label{code:datalog-model}
+
+  \end{codeFloat}
+\end{document}

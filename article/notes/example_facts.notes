@@ -1,0 +1,150 @@
+// externals
+
+External(prim_int_add, 0, Int64, primop)
+ExternalParam(prim_int_add, 0, Int64)
+ExternalParam(prim_int_add, 1, Int64)
+
+// grin main
+
+EntryPoint(grinMain)
+
+LitAssign(k1, Int64, 1)
+NodeArgument(n1, 0, k1)
+Node(n1, CInt)
+Store(a, n1)
+
+LitAssign(k2, Int64, 2)
+NodeArgument(n2, 0, k2)
+Node(n2, CInt)
+Store(b, n2)
+
+LitAssign(k3, Int64, 3)
+NodeArgument(n3, 0, k3)
+Node(n3, CInt)
+Store(c, n3)
+
+Node(n4, FAdd)
+NodeArgument(n4, 0, b)
+NodeArgument(n4, 1, c)
+
+Node(n5, P1_add)
+NodeArgument(n5, 0, a)
+Store(r, n4)
+Move(suc, n5)
+
+Call(res, apply)
+CallArgument(res, 0, suc)
+CallArgument(res, 1, r)
+
+ReturnValue(grinMain, res)
+
+// add x y
+
+FunctionParameter(add, 0, x)
+FunctionParameter(add, 1, y)
+
+Call(x', eval)
+CallArgument(x', 0, x)
+NodePattern(_1, CInt, x')
+NodeParameter(_1, 0, x1)
+
+Call(y', eval)
+CallArgument(y', 0, y)
+NodePattern(_2, CInt, y')
+NodeParameter(_2, 0, y1)
+
+Call(add.r, prim_int_add)
+CallArgument(add.r, 0, x1)
+CallArgument(add.r, 1, y1)
+
+Node(n6, CInt)
+NodeArgument(n6, 0, add.r)
+ReturnValue(add, n6)
+
+// eval p
+
+FunctionParameter(eval, 0, p)
+
+Fetch(v, p)
+
+Case(eval.r, v)
+
+Alt(eval.r, alt1, CInt)
+AltParameter(eval.r, CInt, 0, _n)
+ReturnValue(alt1, alt1)
+
+Alt(eval.r, alt2, P2_add)
+ReturnValue(alt2, alt2)
+
+Alt(eval.r, alt3, P1_add)
+AltParameter(eval.r, P1_add, 0, _x)
+ReturnValue(alt3, alt3)
+
+Alt(eval.r, alt4, Fadd)
+AltParameter(eval.r, Fadd, 0, x2)
+AltParameter(eval.r, Fadd, 1, y2)
+Call(r_add, add)
+CallArgument(r_add, 0, x2)
+CallArgument(r_add, 1, y2)
+Update(_3, p, r_add)
+ReturnValue(alt4, r_add)
+
+ReturnValue(eval, eval.r)
+
+// apply f u
+
+FunctionParameter(apply, 0, f)
+FunctionParameter(apply, 1, u)
+
+Case(apply.r, f)
+
+Alt(apply.r, alt5, P2_add)
+Node(f', P1_add)
+NodeArgument(f', 0, u)
+ReturnValue(alt5, f')
+
+
+Alt(apply.r, alt6, P1_add)
+AltParameter(apply.r, P1_add, 0, z)
+Call(res, add)
+CallArgument(res, 0, z)
+CallArgument(res, 1, u)
+ReturnValue(alt6, res)
+
+ReturnValue(apply, apply.r)
+
+-------------------------
+
+
+FirstInst(grinMain, k1)
+FirstInst(add, x')
+FirstInst(eval, v)
+FirstInst(apply, apply.r)
+
+NextInst(alt1, eval.r)
+NextInst(alt2, eval.r)
+NextInst(alt3, eval.r)
+NextInst(r_add, eval.r)
+NextInst(f', apply.r)
+NextInst(res, apply.r)
+NextInst(suc, res)
+NextInst(n5, suc)
+NextInst(r, n5)
+NextInst(n4, r)
+NextInst(c, n4)
+NextInst(n3, c)
+NextInst(k3, n3)
+NextInst(b, k3)
+NextInst(n2, b)
+NextInst(k2, n2)
+NextInst(a, k2)
+NextInst(n1, a)
+NextInst(k1, n1)
+NextInst(add.r, n6)
+NextInst(alt4, r_add)
+NextInst(r_add, _3)
+NextInst(v, alt4)
+NextInst(alt5, f')
+NextInst(alt6, res)
+NextInst(f, alt5)
+NextInst(f, alt6)

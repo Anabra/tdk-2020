@@ -309,6 +309,9 @@
 \newcommand{\rulename}[1]{\quad (\textsc{#1})}
 \newcommand{\InferRule}[3]{\inferrule{#1}{#2} \rulename{#3}}
 \newcommand{\DatalogRule}[3]{\inferrule{#2}{#1} \rulename{#3}}
+\newcommand{\EmissionRule}[3]{\DatalogRule{#1}{#2}{#3}}
+%\let \EmissionRule \DatalogRule
+\newcommand{\EmissionRuleL}[3]{\mprset{flushleft} \EmissionRule{#1}{#2}{#3} \mprset{center}}
 
 \newcommand{\UnaryRelation}[2]{\text{\texttt{#1}}(#2)}
 \newcommand{\BinaryRelation}[3]{\text{\texttt{#1}}(#2,#3)}

@@ -2,13 +2,13 @@
 \begin{document}
 	
 	
-	\begin{figure}
+	\begin{figure}[h]
 	
 		\setlength{\grammarparsep}{0.1cm} % increase separation between rules
 		\setlength{\grammarindent}{2.5cm} % increase separation between LHS/RHS 
 		\begin{grammar}
-			<prog> ::= {[} external pure: <external>* {]} \\ 
-			{[} external effectful: <external>* {]} \\
+			<prog> ::= {[} primop pure: <external>* {]} \\ 
+			{[} primop effectful: <external>* {]} \\
 			{[} ffi pure: <external>* {]} \\
 			{[} ffi effectful: <external>* {]} \\
 			<def>+
@@ -91,8 +91,8 @@
 				<con> ::= <name>
 			\end{grammar}
 		\end{minipage}
-		
 	\caption{Extended syntax of the GRIN IR}
+	\label{fig:syntax-new}
 	\end{figure}
 	
 \end{document}

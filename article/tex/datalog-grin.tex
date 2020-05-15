@@ -3,11 +3,113 @@
 
   In this chapter we present a logic-based representation of the GRIN IR, as well as the formalization of the created-by and liveness dataflow analyses.
 
-  \section{Datalog model of GRIN}
+  \section{Datalog model of GRIN} \label{sec:datalog-model}
+
+  \begin{figure}[h]
+    \begin{mathpar}
+    \EmissionRule{\LitAssign{k}{\tau(lit)}{lit}}
+                 {\pilcode{k <- pure <lit>}}
+                 {ER-1}
+    \and
+    \EmissionRule{\Move{y}{x}}
+                {\pilcode{y <- pure x}}
+                {ER-2}
+    \and
+    \EmissionRule{\Store{p}{n}}
+                {\pilcode{p <- store n}}
+                {ER-3}
+    \and
+    \EmissionRule{\Fetch{n}{p}}
+                {\pilcode{n <- fetch p}}
+                {ER-4}
+    \and
+    \EmissionRule{\Update{x}{p}{n}}
+                {\pilcode{x <- update p n}}
+                {ER-5}
+    \end{mathpar}
+  \caption{Emission rules for simple instructions}
+  \end{figure}
+
+	\begin{figure}[h]
+		\begin{mathpar}
+		  \EmissionRule{\Call{r}{f} \\\\
+                    \CallArgument{r}{\pi(x)}{x}}
+                    {\pilcode{r <- f ... x ...}}
+                    {ER-6}
+      \\\\\\
+      \EmissionRule{\Node{n}{tag} \\\\
+                    \NodeArgument{n}{\pi(x)}{x}}
+                    {\pilcode{n <- pure (tag ... x ...)}}
+                    {ER-7}
+      \and
+      \EmissionRule{\NodePattern{n}{tag}{m} \\\\
+                    \NodeParameter{n}{\pi(x)}{x}}
+                    {\pilcode{(tag ... x ...) @ n <- pure m}}
+                    {ER-8}
+		\end{mathpar}
+	\caption{Emission rules for function calls and node values}
+	\end{figure}
+
+  \begin{figure}[h]
+    \begin{mathpar}
+    \EmissionRule{\Case{r}{s}}
+                {\pilcode{r <- case s of ...}}
+                {ER-9}
+    \and
+    \EmissionRuleL{\ReturnValue{alt}{x}}
+                  {\pilcode{... @ alt -> } \\\\
+                  \\ \dots \\\\
+                  \\ \pilcode{pure x}}
+                  {ER-10}
+    \and
+    \EmissionRuleL{\AltLiteral{r}{alt}{lit}}
+                {\pilcode{r <- case s of} \\\\
+                  \\ \pilcode{<lit> @ alt -> ...}}
+                {ER-11}
+    \and
+    \EmissionRuleL{\AltDefault{r}{alt}}
+                {\pilcode{r <- case s of} \\\\
+                  \\ \pilcode{\#default @ alt -> ...}}
+                {ER-12}
+    \and
+    \EmissionRuleL{\hspace{1.1cm} \Alt{r}{alt}{tag} \\\\
+                  \AltParameter{r}{tag}{\pi(x)}{x}}
+                {\pilcode{r <- case s of} \\\\
+                  \\ \pilcode{(tag ... x ...) @ alt -> ...}}
+                {ER-13}
+    \end{mathpar}
+  \caption{Emission rules for case expressions}
+  \end{figure}
+
+	\begin{figure}[h]
+		\begin{mathpar}
+    \EmissionRule{\FunctionParameter{f}{\pi(x)}{x}}
+               {\pilcode{f ... x ... = ...}}
+               {ER-14}
+    \and
+    \EmissionRuleL{\ReturnValue{f}{x}}
+                {\pilcode{f ... =} \\\\
+                \\ \dots \\\\
+                \\ \pilcode{pure x}}
+                {ER-15}
+    \and
+    \EmissionRuleL{\External{f}{\epsilon(effect)}{retTy} \\\\
+                  \ExternalParam{f}{\pi(ty)}{ty}}
+                {\pilcode{external <effect>} \\\\
+                \\ \pilcode{f :: ... -> ty -> ... -> retTy}}
+                {ER-16}
+    \and
+    \EmissionRule{\EntryPoint{main}}
+                { }
+                {ER-17}
+		\end{mathpar}
+		\caption{Emission rules for functions}
+	\end{figure}
+
 
   \section{A simple analysis example}
 
-  \begin{figure}
+  \begin{figure}[h]
     \begin{mathpar}
       \InferRule{\Store{v}{i}}
                 {\Heap{v}{i}}
@@ -26,7 +128,7 @@
 
   \section{Created-by analysis}
 
-  \begin{figure}
+  \begin{figure}[h]
     \begin{mathpar}
     \InferRule{\LitAssign{v}{\any}{\any}}
               {\CreatedBy{v}{v}}
@@ -51,7 +153,7 @@
   \caption{Simple rules of the CreatedBy analysis}
   \end{figure}
 
-  \begin{figure}
+  \begin{figure}[h]
     \begin{mathpar}
     \InferRule{\Move{v}{n} \\\\
                 \CreatedBy{n}{n'}}
@@ -102,7 +204,7 @@
   \caption{Some recursive rules of the CreatedBy analysis}
   \end{figure}
 
-  \begin{figure}
+  \begin{figure}[h]
     	\begin{mathpar}
       \DatalogRule{\CreatedBy{alt}{scrut'}}
                   {\Case{r}{scrut} \\\\
@@ -165,7 +267,7 @@
 
   \section{Liveness analysis}
 
-  \begin{figure}
+  \begin{figure}[h]
 
     \begin{mathpar}
 		\DatalogRule{\NodeCreatedBy{n}{t}{n'}}
@@ -204,7 +306,7 @@
   \caption{Helper relations}
   \end{figure}
 
-  \begin{figure}
+  \begin{figure}[h]
     	\begin{mathpar}
       \DatalogRule{\LiveSVal{x}}
                   {\EntryPoint{main} \\\\
@@ -266,7 +368,7 @@
   \caption{Liveness rules for simple values}
   \end{figure}
 
-  \begin{figure}
+  \begin{figure}[h]
     \begin{mathpar}
     \DatalogRule{\LiveNodeArg{n}{t}{i}}
 								{\LiveSVal{x} \\\\
@@ -293,7 +395,7 @@
   \caption{Liveness rules for node values}
   \end{figure}
 
-  \begin{figure}
+  \begin{figure}[h]
     \begin{mathpar}
     \DatalogRule{\LiveNodeArg{scrut}{t}{i}}
 								{\LiveNodeArg{alt}{t}{i} \\\\
@@ -332,7 +434,7 @@
   \caption{Liveness rules for case expressions}
   \end{figure}
 
-  \begin{figure}
+  \begin{figure}[h]
     \begin{mathpar}
     \DatalogRule{\LiveFunRetNodeArg{f}{t}{i}}
 								{\LiveNodeArg{y}{t}{i} \\\\
@@ -354,7 +456,7 @@
   \caption{Liveness rules for functions}
   \end{figure}
 
-  \begin{figure}
+  \begin{figure}[h]
     \begin{mathpar}
     \DatalogRule{\LiveHeapNodeArg{q}{t}{i}}
 								{\LiveNodeArg{n}{t}{i} \\\\
