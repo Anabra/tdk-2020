@@ -13,9 +13,9 @@
 
   \section{Extended syntax}
 
-  As mentioned earlier, the original syntax of GRIN allows for arguably too much diversity, as well as makes it possible to generate such code where certain intermediate values are not addressable by a unique identifier. Fortunately, solving the first problem also makes it easier to solve the second one, since the less diverse the syntax is, the less likely it is to have unidentifiable intermediate values.
+  As mentioned earlier, the original syntax of GRIN allows for arguably too much diversity, as well as makes it possible to generate such code where certain intermediate values are not addressable by a unique identifier. Fortunately, solving the first problem also makes it easier to solve the second one, since the less diverse the syntax, the less likely it is to have unidentifiable intermediate values.
 
-  Making sure that each intermediate value is identifiable is one part of the problem, but we would also like to make the identifiers visible in the program. That is guaranteeing every program point can be referenced by an explicit name. This design choice is motivated by the fact that it is significantly easier to work with an intermediate language where each value has a human-readable and visible name.
+  Making sure that each intermediate value is identifiable is one part of the problem, but we would also like to make the identifiers visible in the program. That is guaranteeing every program point can be referenced by an explicit name. For example, if each binding had a variable pattern, then they would be identifiable by that variable's name. This design choice is motivated by the fact that it is significantly easier to work with an intermediate language where each value has a human-readable and visible name.
   
   The new syntax specification can be seen in Figure~\ref{fig:syntax-new}.
 

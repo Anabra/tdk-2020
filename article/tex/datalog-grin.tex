@@ -1,107 +1,115 @@
 \documentclass[main.tex]{subfiles}
 \begin{document}
 
-  In this chapter we present a logic-based representation of the GRIN IR, as well as the formalization of the created-by and liveness dataflow analyses.
+  In this chapter we discuss logic defined program analyses for GRIN. First, we show how the GRIN language can be modeled by mathematical relations. Then, through a simple example, we illustrate how program analyses can be defined via Horn clauses, and finally we present a logic-based formalization of the created-by and liveness data-flow analyses.
 
   \section{Datalog model of GRIN} \label{sec:datalog-model}
+  
+  \subsection{Simple instructions}
 
   \begin{figure}[h]
     \begin{mathpar}
     \EmissionRule{\LitAssign{k}{\tau(lit)}{lit}}
                  {\pilcode{k <- pure <lit>}}
-                 {ER-1}
+                 {ER-Lit}
     \and
     \EmissionRule{\Move{y}{x}}
                 {\pilcode{y <- pure x}}
-                {ER-2}
+                {ER-Move}
     \and
     \EmissionRule{\Store{p}{n}}
                 {\pilcode{p <- store n}}
-                {ER-3}
+                {ER-Store}
     \and
     \EmissionRule{\Fetch{n}{p}}
                 {\pilcode{n <- fetch p}}
-                {ER-4}
+                {ER-Fetch}
     \and
     \EmissionRule{\Update{x}{p}{n}}
                 {\pilcode{x <- update p n}}
-                {ER-5}
+                {ER-Update}
     \end{mathpar}
   \caption{Emission rules for simple instructions}
   \end{figure}
+
+	\subsection{Function calls and node values}
 
 	\begin{figure}[h]
 		\begin{mathpar}
 		  \EmissionRule{\Call{r}{f} \\\\
                     \CallArgument{r}{\pi(x)}{x}}
                     {\pilcode{r <- f ... x ...}}
-                    {ER-6}
+                    {ER-Call}
       \\\\\\
       \EmissionRule{\Node{n}{tag} \\\\
                     \NodeArgument{n}{\pi(x)}{x}}
                     {\pilcode{n <- pure (tag ... x ...)}}
-                    {ER-7}
+                    {ER-Node}
       \and
       \EmissionRule{\NodePattern{n}{tag}{m} \\\\
                     \NodeParameter{n}{\pi(x)}{x}}
                     {\pilcode{(tag ... x ...) @ n <- pure m}}
-                    {ER-8}
+                    {ER-AsPat}
 		\end{mathpar}
 	\caption{Emission rules for function calls and node values}
 	\end{figure}
+
+	\subsection{Case expressions}
 
   \begin{figure}[h]
     \begin{mathpar}
     \EmissionRule{\Case{r}{s}}
                 {\pilcode{r <- case s of ...}}
-                {ER-9}
+                {ER-Case}
     \and
     \EmissionRuleL{\ReturnValue{alt}{x}}
                   {\pilcode{... @ alt -> } \\\\
                   \\ \dots \\\\
                   \\ \pilcode{pure x}}
-                  {ER-10}
+                  {ER-AltRetVal}
     \and
     \EmissionRuleL{\AltLiteral{r}{alt}{lit}}
                 {\pilcode{r <- case s of} \\\\
                   \\ \pilcode{<lit> @ alt -> ...}}
-                {ER-11}
+                {ER-AltLit}
     \and
     \EmissionRuleL{\AltDefault{r}{alt}}
                 {\pilcode{r <- case s of} \\\\
                   \\ \pilcode{\#default @ alt -> ...}}
-                {ER-12}
+                {ER-AltDef}
     \and
     \EmissionRuleL{\hspace{1.1cm} \Alt{r}{alt}{tag} \\\\
                   \AltParameter{r}{tag}{\pi(x)}{x}}
                 {\pilcode{r <- case s of} \\\\
                   \\ \pilcode{(tag ... x ...) @ alt -> ...}}
-                {ER-13}
+                {ER-AltNode}
     \end{mathpar}
   \caption{Emission rules for case expressions}
   \end{figure}
+
+	\subsection{Function definitions}
 
 	\begin{figure}[h]
 		\begin{mathpar}
     \EmissionRule{\FunctionParameter{f}{\pi(x)}{x}}
                {\pilcode{f ... x ... = ...}}
-               {ER-14}
+               {ER-Fun}
     \and
     \EmissionRuleL{\ReturnValue{f}{x}}
                 {\pilcode{f ... =} \\\\
                 \\ \dots \\\\
                 \\ \pilcode{pure x}}
-                {ER-15}
+                {ER-FunRetVal}
     \and
     \EmissionRuleL{\External{f}{\epsilon(effect)}{retTy} \\\\
                   \ExternalParam{f}{\pi(ty)}{ty}}
                 {\pilcode{external <effect>} \\\\
                 \\ \pilcode{f :: ... -> ty -> ... -> retTy}}
-                {ER-16}
+                {ER-Ext}
     \and
     \EmissionRule{\EntryPoint{main}}
                 { }
-                {ER-17}
+                {ER-Entry}
 		\end{mathpar}
 		\caption{Emission rules for functions}
 	\end{figure}
