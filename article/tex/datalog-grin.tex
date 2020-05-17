@@ -1,11 +1,27 @@
 \documentclass[main.tex]{subfiles}
 \begin{document}
 
-  In this chapter we discuss logic defined program analyses for GRIN. First, we show how the GRIN language can be modeled by mathematical relations. Then, through a simple example, we illustrate how program analyses can be defined via Horn clauses, and finally we present a logic-based formalization of the created-by and liveness data-flow analyses.
+  In this chapter we discuss logic defined program analyses for GRIN. First, we show how the GRIN language can be modeled by mathematical relations. Then, through a simple example, we illustrate how program analyses can be defined via recursive relations in Datalog. Finally, --- using the mentioned Datalog model --- we present a logic-based formalization of the created-by and liveness data-flow analyses.
+
+	\section{Motivation}
+	
+	Static program analysis specifications are usually defined in a declarative manner through mutually recursive relations. Their implementations however, are often given in an imperative style in order to maximize performance. This discrepancy between the denotational and operational semantics leads to very complicated hand-written implementations.
+	
+	Fortunately, many static program analysis frameworks \cite{doop, cclyzer, souffle-2} already addressed this issue. These tools use Datalog --- a declarative logic programming language --- as the surface language for defining analyses, then the Datalog program is automatically compiled to efficient imperative code. Datalog allows the programmer to define mutually recursive relations which then are evaluated to a fixed point. This approach facilitates the implementation of complex program analyses by allowing the programmer to focus on the high level specification, meanwhile guaranteeing competitive performance.
 
   \section{Datalog model of GRIN} \label{sec:datalog-model}
   
+  In order to define Datalog analyses for GRIN, the first thing we need need is a Datalog model of the language itself. That is, a declarative, relation-based representation of GRIN programs, that captures the same information that an abstract syntax tree would. In fact, it is possible to define a model from which the original program can be recreated. This suggests an isomorphism between the AST and the Datalog model. However, for our purposes a less precise model is sufficient. 
+  
+  The rules below define the Datalog model of the GRIN IR. The rules are purely syntactic, and consist of a GRIN program snippet and the corresponding Datalog relation(s). The snippets can be thought of as patterns, which are matched against the current node during the traversal of the abstract syntax tree. If they match, then the relation(s) below the line are "emitted". Hence, these rules are called \emph{emission rules}. The emitted relations will serve as the input relations for the analyses.
+  
+  Some of the emission rules contain templates, special functions or partial program snippets. Templates are surrounded by angled brackets and they should be interpreted as holes for specific program elements. For example, the template \pilcode{<lit>} marks an arbitrary literal. There are three special functions: $\tau$, $\pi$ and $\epsilon$. The expression $\tau(x)$ denotes the type of $x$, $\pi(x)$ denotes the position (zero-based index) of $x$ and $\epsilon(x)$ denotes whether $x$ is effectful. $\tau$ is used to determine the types of literals, $\pi$ is used to determine the position of an argument or parameter (of a node or function respectively) and $\epsilon$ is used to determine whether an external is side-effecting or not. $\epsilon(pure)$ is false, $\epsilon(effectful)$ is true. Finally, \dots in partial program snippets are used to denote syntactically valid, but irrelevant parts of the program. In some cases they are used to denote missing arguments or case alternatives, in which case the rule should be applied to all arguments and case alternatives.
+  
+  Furthermore we use the terminology "function parameter" and "function argument" to mean formal and actual function arguments respectively. Also, "node parameter" means the variable arguments in an @pattern (always on the left-hand side), and "node argument" means the variable in a node value (always on the right-hand side).
+  
   \subsection{Simple instructions}
+  
+  These rules are responsible for handling the syntactically simple instructions of GRIN. These are literal assignment (\textsc{ER-Lit}), variable copying (\textsc{ER-Move}), store (\textsc{ER-Store}), fetch (\textsc{ER-Fetch}) and update (\textsc{ERF-Update}). The rules can be seen in Figure~\ref{fig:er-simple}. 
 
   \begin{figure}[h]
     \begin{mathpar}
@@ -30,9 +46,12 @@
                 {ER-Update}
     \end{mathpar}
   \caption{Emission rules for simple instructions}
+  \label{fig:er-simple}
   \end{figure}
 
 	\subsection{Function calls and node values}
+	
+	The rules \textsc{ER-Call}, \textsc{ER-Node} and \textsc{ER-AsPat} handle function calls, node value creation and @patterns respectively. They can be seen in Figure~\ref{fig:er-funcalls-nodevals}.
 
 	\begin{figure}[h]
 		\begin{mathpar}
@@ -52,9 +71,12 @@
                     {ER-AsPat}
 		\end{mathpar}
 	\caption{Emission rules for function calls and node values}
+	\label{fig:er-funcalls-nodevals}
 	\end{figure}
 
 	\subsection{Case expressions}
+	
+	These rules handle case expression. \textsc{ER-Case} relates the case expression to a name; \textsc{ER-AltRetVal} relates the return value of a binding sequence to the encompassing alternative's name; \textsc{ER-AltLit}, \textsc{ER-AltDef} and \textsc{ER-AltNode} represent the literal, default and node-valued case alternatives. The rules can be seen in Figure~\ref{fig:er-case}.
 
   \begin{figure}[h]
     \begin{mathpar}
@@ -85,9 +107,12 @@
                 {ER-AltNode}
     \end{mathpar}
   \caption{Emission rules for case expressions}
+  \label{fig:er-case}
   \end{figure}
 
 	\subsection{Function definitions}
+	
+	\textsc{ER-Fun} relates function parameters to the function's name, and \textsc{ER-FunRetVal} relates the return value of a binding sequence to the encompassing function's name. \textsc{ER-Ext} handles external declarations, and \textsc{ER-Entry} denotes the main entry point of the program.
 
 	\begin{figure}[h]
 		\begin{mathpar}
@@ -112,6 +137,7 @@
                 {ER-Entry}
 		\end{mathpar}
 		\caption{Emission rules for functions}
+		\label{fig:er-fundefs}
 	\end{figure}
 
 
