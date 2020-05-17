@@ -1,7 +1,7 @@
 \documentclass[main.tex]{subfiles}
 \begin{document}
 
-  In this chapter we discuss logic defined program analyses for GRIN. First, we show how the GRIN language can be modeled by mathematical relations. Then, through a simple example, we illustrate how program analyses can be defined via recursive relations in Datalog. Finally, --- using the mentioned Datalog model --- we present a logic-based formalization of the created-by and liveness data-flow analyses.
+  In this chapter we discuss logic defined program analyses for GRIN. First, we show how the GRIN language can be modeled by mathematical relations. Then, through a standard points-to analysis, we illustrate how program analyses can be defined via recursive relations in Datalog. Finally, --- using the mentioned Datalog model --- we present a logic-based formalization of the created-by and liveness data-flow analyses.
 
 	\section{Motivation}
 	
@@ -15,9 +15,11 @@
   
   The rules below define the Datalog model of the GRIN IR. The rules are purely syntactic, and consist of a GRIN program snippet and the corresponding Datalog relation(s). The snippets can be thought of as patterns, which are matched against the current node during the traversal of the abstract syntax tree. If they match, then the relation(s) below the line are "emitted". Hence, these rules are called \emph{emission rules}. The emitted relations will serve as the input relations for the analyses.
   
-  Some of the emission rules contain templates, special functions or partial program snippets. Templates are surrounded by angled brackets and they should be interpreted as holes for specific program elements. For example, the template \pilcode{<lit>} marks an arbitrary literal. There are three special functions: $\tau$, $\pi$ and $\epsilon$. The expression $\tau(x)$ denotes the type of $x$, $\pi(x)$ denotes the position (zero-based index) of $x$ and $\epsilon(x)$ denotes whether $x$ is effectful. $\tau$ is used to determine the types of literals, $\pi$ is used to determine the position of an argument or parameter (of a node or function respectively) and $\epsilon$ is used to determine whether an external is side-effecting or not. $\epsilon(pure)$ is false, $\epsilon(effectful)$ is true. Finally, \dots in partial program snippets are used to denote syntactically valid, but irrelevant parts of the program. In some cases they are used to denote missing arguments or case alternatives, in which case the rule should be applied to all arguments and case alternatives.
+  \subsection{Notation}
   
-  Furthermore we use the terminology "function parameter" and "function argument" to mean formal and actual function arguments respectively. Also, "node parameter" means the variable arguments in an @pattern (always on the left-hand side), and "node argument" means the variable in a node value (always on the right-hand side).
+  Some of the emission rules contain templates, special functions or partial program snippets. Templates are surrounded by angled brackets and they should be interpreted as holes for specific program elements. For example, the template \pilcode{<lit>} marks an arbitrary literal. There are three special functions: $\tau$, $\pi$ and $\epsilon$. The expression $\tau(x)$ denotes the type of $x$, $\pi(x)$ denotes the position (zero-based index) of $x$ and $\epsilon(x)$ denotes whether $x$ is effectful. $\tau$ is used to determine the types of literals, $\pi$ is used to determine the position of an argument or parameter (of a node or function respectively) and $\epsilon$ is used to determine whether an external is side-effecting or not. $\epsilon(pure)$ is false, $\epsilon(effectful)$ is true. Finally, "\dots{}" in partial program snippets are used to denote syntactically valid, but irrelevant parts of the program. In some rules they are used to denote missing arguments or case alternatives, in which case the rule should be applied to all arguments and case alternatives.
+  
+  Furthermore we use the terminology "function parameter" and "function argument" to mean formal and actual function arguments respectively. Also, "node parameter" means the variable arguments in an @pattern (on the left-hand side), and "node argument" means the variable arguments in a node value (on the right-hand side).
   
   \subsection{Simple instructions}
   
@@ -76,7 +78,7 @@
 
 	\subsection{Case expressions}
 	
-	These rules handle case expression. \textsc{ER-Case} relates the case expression to a name; \textsc{ER-AltRetVal} relates the return value of a binding sequence to the encompassing alternative's name; \textsc{ER-AltLit}, \textsc{ER-AltDef} and \textsc{ER-AltNode} represent the literal, default and node-valued case alternatives. The rules can be seen in Figure~\ref{fig:er-case}.
+	These rules handle case expression. \textsc{ER-Case} relates the case expression to a name; \textsc{ER-AltRet} relates the return value of a binding sequence to the encompassing alternative's name; \textsc{ER-AltLit}, \textsc{ER-AltDef} and \textsc{ER-AltNode} represent the literal, default and node-valued case alternatives. The rules can be seen in Figure~\ref{fig:er-case}.
 
   \begin{figure}[h]
     \begin{mathpar}
@@ -88,7 +90,7 @@
                   {\pilcode{... @ alt -> } \\\\
                   \\ \dots \\\\
                   \\ \pilcode{pure x}}
-                  {ER-AltRetVal}
+                  {ER-AltRet}
     \and
     \EmissionRuleL{\AltLiteral{r}{alt}{lit}}
                 {\pilcode{r <- case s of} \\\\
@@ -112,7 +114,7 @@
 
 	\subsection{Function definitions}
 	
-	\textsc{ER-Fun} relates function parameters to the function's name, and \textsc{ER-FunRetVal} relates the return value of a binding sequence to the encompassing function's name. \textsc{ER-Ext} handles external declarations, and \textsc{ER-Entry} denotes the main entry point of the program.
+	\textsc{ER-Fun} relates function parameters to the function's name, and \textsc{ER-FunRet} relates the return value of a binding sequence to the encompassing function's name. \textsc{ER-Ext} handles external declarations, and \textsc{ER-Entry} denotes the main entry point of the program.
 
 	\begin{figure}[h]
 		\begin{mathpar}
@@ -124,7 +126,7 @@
                 {\pilcode{f ... =} \\\\
                 \\ \dots \\\\
                 \\ \pilcode{pure x}}
-                {ER-FunRetVal}
+                {ER-FunRet}
     \and
     \EmissionRuleL{\External{f}{\epsilon(effect)}{retTy} \\\\
                   \ExternalParam{f}{\pi(ty)}{ty}}
@@ -141,84 +143,110 @@
 	\end{figure}
 
 
-  \section{A simple analysis example}
+  \section{Points-to analysis}
+  
+  Points-to analyses are a standard type of data-flow analyses. They build an abstract representation of the heap layout of the program (abstract store) by establishing a mapping between abstract heap locations and the possible values they might contain. For GRIN, the \emph{heap points-to analysis} is a path sensitive, but calling context insensitive points-to analysis originally described in \cite{boquist-phd}. Here, we give a logic defined formalization of the analysis in Datalog, concisely expressed in terms of the CreatedBy analysis (see Section~\ref{sec:created-by}). It is important to note, that this version of the analysis only builds the abstract store (locations $\rightarrow$ values mapping) and not the abstract environment (variable $\rightarrow$ values mapping). This is because in order to define the liveness analysis, it is sufficient to calculate only the abstract store. In Figure~\ref{fig:heap-analysis} we can see the Datalog rules of the heap analysis.
+  
+  Rule \textsc{H-Store} creates a new abstract location for each \pilcode{store} instruction in the GRIN program. This means, the number of abstract locations the analysis keeps track of is statically bounded. In fact it is equal to the number of \pilcode{store} instructions in the program, implying that the heap analysis over-approximates the actual heap layout. This approximation is always safe, which means a location will always be mapped to a set of statically computed values that is a superset of all the possible dynamically occurring values. Note, that the abstract locations are identified by the pointer's name the \pilcode{store} instruction returns.
+  
+  Rule \textsc{H-Update} extends the abstract locations with all the possible values they might be updated with. This is the rule where the complexity comes in due to the \pilcode{CreatedBy} relation. This relation essentially tracks back the pointer to be updated to its origin. This is necessary, since pointers can alias each other, and we must trace them back to the location they point to.
+  
+  The \any symbol in the relations mean that the given argument is irrelevant. Any value can fill that argument, and the it won't be used in the rule.
 
   \begin{figure}[h]
     \begin{mathpar}
       \InferRule{\Store{v}{i}}
                 {\Heap{v}{i}}
-                {H-1}
+                {H-Store}
       \and
       \InferRule{\Update{\any}{p}{val} \\\\
                 \CreatedBy{p}{p'} \\\\
                 \Heap{p'}{\any}}
                 {\Heap{p'}{val}}
-                {H-2}
+                {H-Update}
     \end{mathpar}
 
   \caption{Rules of the Heap analysis}
+  \label{fig:heap-analysis}
   \end{figure}
 
 
-  \section{Created-by analysis}
+  \section{Created-by analysis} \label{sec:created-by}
+  
+  The created-by analysis answers the question: \emph{What program point was a given variable created by?}. It traces back variables to their possible origins. 
+  For example a variable might have been an alt parameter inside a case expression scrutinizing a node fetched from the heap put their by a function, and so on. We would like to trace back such variables to their \emph{original} definition sites. It is important to mention that a variable may have multiple possible origins since the control-flow can branch in case expressions. For instance, the result of a case expression could have been created in any of the alternatives.
+  
+  In this section, we present a Datalog formalization of a path sensitive and calling context insensitive created-by analysis for GRIN.
+  
+  The created-by analysis was originally described by Remi Turk \cite{remi-masters} who introduced it as an extended points-to analysis. 
+  
+  \subsection{Origin rules}
+  
+  The rules in Figure~\ref{fig:cby-origins} are the origin rules of the created-by analysis. The premises of the rules are all and the only possible ways a value can be created. This means that all variables can be traced back to a binding that has a literal assignment, node value creation, \pilcode{store}, \pilcode{update} or external functional call right-hand side. These origins are also called \emph{producers} in the context of dead data elimination (see Section~\ref{sec:dde}).
 
   \begin{figure}[h]
     \begin{mathpar}
     \InferRule{\LitAssign{v}{\any}{\any}}
               {\CreatedBy{v}{v}}
-              {CBy-1}
+              {CBy-Lit}
     \and
     \InferRule{\Node{n}{\any}}
               {\CreatedBy{n}{n}}
-              {CBy-2}
+              {CBy-Node}
     \and
     \InferRule{\Store{p}{\any}}
               {\CreatedBy{p}{p}}
-              {CBy-3}
+              {CBy-Store}
     \and
     \InferRule{\Update{v}{\any}{\any}}
               {\CreatedBy{v}{v}}
-              {CBy-4}
+              {CBy-Update}
     \and
-    \InferRule{\LitAssign{v}{\any}{\any}}
+    \InferRule{\Call{v}{f} \\\\
+    					\External{f}{\any}{\any}}
               {\CreatedBy{v}{v}}
-              {CBy-5}
+              {CBy-Ext}
     \end{mathpar}
-  \caption{Simple rules of the CreatedBy analysis}
+  \caption{Origin rules of the created-by analysis}
+  \label{fig:cby-origins}
   \end{figure}
+
+	\subsection{Non-case related rules}
+	
+	Figure~\ref{fig:cby-noncase} shows all the recursive rules of the created-by analysis that do not deal with case expressions. \textsc{CBy-Move} is a transitive relation, \textsc{CBy-FunParam} traces back origin through function parameters, \textsc{CBy-Fetch} handles \pilcode{fetch} instructions, \textsc{CBy-Call} propagates information \emph{into} function parameters, \textsc{CBy-FunRet} propagates information \emph{out} of function return values, and finally \textsc{CBy-AsPatNode} and \textsc{CBy-AsPatVar} flow information through the node pattern and variable parts of @patterns. 
 
   \begin{figure}[h]
     \begin{mathpar}
     \InferRule{\Move{v}{n} \\\\
                 \CreatedBy{n}{n'}}
                 {\CreatedBy{v}{n'}}
-                {CBy-6}
+                {CBy-Move}
 		\and
 		\InferRule{\FunctionParameter{\any}{\any}{p} \\\\
 							\CreatedBy{v_1}{p} \\\\
 							\CreatedBy{p}{v_2}}
 							{\CreatedBy{v_1}{v_2}}
-							{CBy-7}
+							{CBy-FunParam}
 		\and
 		\DatalogRule{\CreatedBy{v}{n'}}
 								{\Fetch{v}{p} \\\\
 									\CreatedBy{p}{p'} \\\\
 									\Heap{p'}{n} \\\\
 									\CreatedBy{n}{n'}}
-									{CBy-8}
+									{CBy-Fetch}
 		\and
 		\DatalogRule{\CreatedBy{x}{arg'}}
 								{\CallArgument{r}{i}{arg} \\\\
 								\Call{r}{f} \\\\
 								\FunctionParameter{f}{i}{x} \\\\
 								\CreatedBy{arg}{arg'}}
-								{CBy-9}
+								{CBy-Call}
 		\and
 		\DatalogRule{\CreatedBy{r}{v'}}
 								{\Call{r}{f} \\\\
 								\ReturnValue{f}{v} \\\\
 								\CreatedBy{v}{v'}}
-								{CBy-10}
+								{CBy-FunRet}
 		%TODO: NodeCreatedBy
 		\and
 		\DatalogRule{\CreatedBy{u}{arg'}}
@@ -228,15 +256,24 @@
 								\Node{n'}{tag} \\\\
 								\NodeArgument{n'}{i}{arg} \\\\
 								\CreatedBy{arg}{arg'}}
-								{CBy-11}
+								{CBy-AsPatNode}
 		\and
 		\DatalogRule{\CreatedBy{v}{n'}}
 								{\NodePattern{v}{\any}{n} \\\\
 								\CreatedBy{n}{n'}}
-								{CBy-12}
+								{CBy-AsPatVar}
     \end{mathpar}
-  \caption{Some recursive rules of the CreatedBy analysis}
+  \caption{Non-case related rules of the created-by analysis}
+  \label{fig:cby-noncase}
   \end{figure}
+
+	\subsection{Case expression related rules}
+	
+	In Figure~\ref{fig:cby-case} we can see all the rules of thecreated-by analysis related to case expressions and the case alternatives. Rules \textsc{CBy-AltLit}, \textsc{CBy-AltNode} and \textsc{CBy-AltDef} propagate information between the names of (literal, node and default) alternatives and the case expression's scrutinee. That is, the origin of the alternative's name is the same as the origin of the scrutinee. The analysis is path-sensitive, so the \textsc{CBy-AltNode} rule only propagates information from the scrutinee to the alternative if the alternative is possible during the execution of the program. In other words, it must be checked whether the scrutinee's origin can be a node value with the same tag as the node in the alternative's pattern. This is a safe static approximation of the runtime behaviour. Literal-valued and default alternatives are always considered possible.
+	
+	\textsc{CBy-AltParam} propagates origin information from the scrutinee's node arguments into the alternative's paramaters if the tags of the scrutinee's node value and the alternative's pattern are the same.
+	
+	The rules \textsc{CBy-AltNode-Ret}, \textsc{CBy-AltLit-Ret} and \textsc{CBy-AltDef-Ret} propagate the origins of the alternatives' return values into the result of the case expression, if the the given alternative is possible.
 
   \begin{figure}[h]
     	\begin{mathpar}
@@ -244,42 +281,42 @@
                   {\Case{r}{scrut} \\\\
                   \AltLiteral{r}{alt}{\any} \\\\
                   \CreatedBy{scrut}{scrut'}}
-                  {CBy-13}
+                  {CBy-AltLit}
       \and
       \DatalogRule{\CreatedBy{alt}{scrut'}}
                   {\Case{r}{scrut} \\\\
-                  \AltLiteral{r}{alt}{tag} \\\\
+                  \Alt{r}{alt}{tag} \\\\
                   \CreatedBy{scrut}{scrut'} \\\\
                   \Node{scrut'}{tag}}
-                  {CBy-14}
+                  {CBy-AltNode}
       \and
       \DatalogRule{\CreatedBy{alt}{scrut'}}
                   {\Case{r}{scrut} \\\\
                   \AltDefault{r}{alt} \\\\
                   \CreatedBy{scrut}{scrut'}}
-                  {CBy-15}
+                  {CBy-AltDef}
       \and
       % TODO: shorter name for altParam
       % TODO: shorter name for nodeArg
       % TODO: PossibleAlt
       \DatalogRule{\CreatedBy{altParam}{nodeArg'}}
-                  {\Case{r}{scrut} \\\\
+                  {\Case{r}{scrut} \\
                   \Alt{r}{\any}{tag} \\\\
                   \AltParameter{r}{tag}{i}{altParam} \\\\
-                  \CreatedBy{scrut}{scrut'} \\\\
+                  \CreatedBy{scrut}{scrut'} \\
                   \Node{scrut'}{tag} \\\\
                   \NodeArgument{scrut'}{i}{nodeArg} \\\\
                   \CreatedBy{nodeArg}{nodeArg'}}
-                  {CBy-16}
+                  {CBy-AltParam}
       \and
       \DatalogRule{\CreatedBy{r}{v'}}
-                  {\Case{r}{scrut} \\\\
+                  {\Case{r}{scrut} \\
                   \Alt{r}{alt}{tag} \\\\
-                  \CreatedBy{scrut}{scrut'} \\\\
+                  \CreatedBy{scrut}{scrut'} \\
                   \Node{scrut'}{tag} \\\\
-                  \ReturnValue{alt}{v} \\\\
+                  \ReturnValue{alt}{v} \\
                   \CreatedBy{v}{v'}}
-                  {CBy-17}
+                  {CBy-AltNode-Ret}
       % TODO: maybe OR?
       \and
       \DatalogRule{\CreatedBy{r}{v'}}
@@ -287,16 +324,17 @@
                   \AltLiteral{r}{alt}{\any} \\\\
                   \ReturnValue{alt}{v} \\\\
                   \CreatedBy{v}{v'}}
-                  {CBy-18}
+                  {CBy-AltLit-Ret}
       \and
       \DatalogRule{\CreatedBy{r}{v'}}
                   {\Case{r}{\any} \\\\
                   \AltDefault{r}{alt} \\\\
                   \ReturnValue{alt}{v} \\\\
                   \CreatedBy{v}{v'}}
-                  {CBy-19}
+                  {CBy-AltDef-Ret}
     \end{mathpar}
-  \caption{Case-related rules of the CreatedBy analysis}
+  \caption{Case-related rules of the created-by analysis}
+  \label{fig:cby-case}
   \end{figure}
 
   \section{Liveness analysis}
