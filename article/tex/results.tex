@@ -1,7 +1,7 @@
 \documentclass[main.tex]{subfiles}
 \begin{document}
 	
-	In this section, we present the initial results of our implementation of the GRIN framework. The measurements presented here can only be considered preliminary, given the compiler needs further work to be comparable to systems like the Glasgow Haskell Compiler or the Idris compiler~\cite{idris}. Nevertheless, these statistics are still relevant, since they provide valuable information about the effectiveness of the optimizer.
+	In this chapter, we present the initial results of our implementation of the GRIN framework. The measurements presented here can only be considered preliminary, given the compiler needs further work to be comparable to systems like the Glasgow Haskell Compiler or the Idris compiler~\cite{idris}. Nevertheless, these statistics are still relevant, since they provide valuable information about the effectiveness of the optimizer.
 	
 	\section{Measured programs}
 	
@@ -38,7 +38,6 @@
 	
 	The actual commands for the binary generation are detailed in Program~code~\ref{code:binary-gen}. That script has two parameters: \pilcode{N} and \pilcode{llvm-in}. \pilcode{N} is the optimization level for the LLVM Optimizer, and \pilcode{llvm-in} is the LLVM program generated from the optimized GRIN code.
 	
-	\vspace{-0.5cm}
 	\begin{codeFloat}[h]
 		\begin{bash}
 			opt-7 -ON <llvm-in> -o <llvm-out> 
@@ -48,11 +47,9 @@
 		\caption{Commands for binary generation}
 		\label{code:binary-gen}
 	\end{codeFloat}
-	\vspace{-0.5cm}
 	
 	As for the runtime measurements of the binary, we used the \pilcode{perf} tool, the runtime of Idris and the minimal runtime of GRIN. The \pilcode{perf} command can be seen in Program~code~\ref{code:binary-measurements} which was used to count the number of executed user space instructions, stores, loads and to measure the execution speeds. The runtimes were used to determine the memory usage, and to make sure that Idris' garbage collector is never triggered.
 
-	\vspace{-0.5cm}
 	\begin{codeFloat}[h]
 		\begin{bash}
 			perf stat -e cpu/mem-stores/u -e "r81d0:u" -e instructions:u <executable>
@@ -60,7 +57,6 @@
 		\caption{Command for runtime measurements of the binary}
 		\label{code:binary-measurements}
 	\end{codeFloat}
-	\vspace{-0.5cm}
 	
 	
 	\section{Length}
@@ -92,7 +88,7 @@
 	We can also notice the huge memory usage difference between the Idris program and the GRIN programs that were only optimized by LLVM but not by GRIN. This because the rather simple code generation scheme of the Idris front end as discussed in Section~\ref{sec:idris-front-end}. However, after running the optimizations, the optimized GRIN programs consume considerably less memory, and have better execution times as well.
 	
 	\begin{center}
-		\begin{minipage}{\linewidth}
+		\begin{minipage}{0.82\textwidth}
 			\captionof{table}{Length - CPU binary statistics}
 			\label{table:length-binary-results}
 			\begin{tcolorbox}[tab2,tabularx={l||r|r|r|r|r|r}]
@@ -139,7 +135,7 @@
 	The binary statistics show that the optimized GRIN programs really do not use any heap memory. As for the other measured metrics, we do not see any major improvements.
 
 	\begin{center}
-		\begin{minipage}{0.96\linewidth}
+		\begin{minipage}{0.79\textwidth}
 			\captionof{table}{Exact length - CPU binary statistics}
 			\label{table:exact-length-binary-results}
 			\begin{tcolorbox}[tab2,tabularx={l||r|r|r|r|r|r}]
@@ -180,7 +176,7 @@
 	The binary statistics look promising for ``Type level functions". Almost all measured performance metrics are strictly decreasing, which suggests that even the default LLVM optimization pipeline can work for GRIN.  Furthermore, the optimized GRIN programs use almost half as much memory as the Idris program, and their binaries are more than 50\% smaller.
 
 	\begin{center}
-		\begin{minipage}{0.97\linewidth}
+		\begin{minipage}{0.8\textwidth}
 			\captionof{table}{Type level functions - CPU binary statistics}
 			\label{table:tyfuns-binary-results}
 			\begin{tcolorbox}[tab2,tabularx={l||r|r|r|r|r|r}]
@@ -221,7 +217,7 @@
 	\end{figure}
 	
 	\begin{center}
-		\begin{minipage}{\linewidth}
+		\begin{minipage}{0.84\textwidth}
 			\captionof{table}{Reverse - CPU binary statistics}
 			\label{table:reverse-binary-results}
 			\begin{tcolorbox}[tab2,tabularx={l||r|r|r|r|r|r}]

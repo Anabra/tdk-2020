@@ -8,7 +8,7 @@
 %TODO: sec labels to chap labels
 \begin{document}
 	
-	\title{A modern look at GRIN,\\ an optimizing functional language back end\thanks{ The project has been supported by the European Union, co-financed by the European Social Fund (EFOP-3.6.3-VEKOP-16-2017-00002)}}
+	\title{A modern look at GRIN,\\ an optimizing functional language back end}
 	
 	%\institute
 	%{
@@ -24,9 +24,12 @@
 		Péter Dávid Podlovics
 	}
 	
-	\maketitle
+	\subfile{titlepage}
 	\subfile{abstract}
 	\tableofcontents
+	
+	\chapter*{Acknowledgements}
+	\subfile{acknowledgements}
 	
 	\chapter{Introduction} \label{chap:intro}
 	\subfile{introduction}
@@ -61,12 +64,16 @@
 	\chapter{Conclusions} \label{chap:conclusions}
 	\subfile{conclusions}
 	
-	% TODO: remove blank page
+	\titleformat{\chapter}[display]{\vspace*{-20pt}\bfseries\huge}{Appendix}{1em}{}
+	\titlespacing*{\chapter}{0pt}{0pt}{0pt}
 	\appendix
 	\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
 	\chapter{Figures}
 	\subfile{appendices}
 		
+	\titleformat{\chapter}[display]
+	{\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+	\titlespacing*{\chapter}{0pt}{0pt}{30pt}
 	\subfile{bibliography}
 
 	

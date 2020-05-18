@@ -1,7 +1,7 @@
 \documentclass[main.tex]{subfiles}
 \begin{document}
 	
-	This section will introduce the reader to the state-of-the-art concerning functional language compiler technologies and whole program optimization. It will compare these systems' main goals, advantages, drawbacks and the techniques they use.
+	This chapter will introduce the reader to the state-of-the-art concerning functional language compiler technologies and whole program optimization. It will compare these systems' main goals, advantages, drawbacks and the techniques they use. Finally, it provides an overview of logic defined static program analysis frameworks.
 	
 	\section{The Glasgow Haskell Compiler}
 
@@ -78,5 +78,21 @@
 	% \section{Compilers with LLVM Back Ends}
 	
 	% In the imperative setting, probably the most well-known compiler with an LLVM back end is Clang~\cite{clang}. Clang's main goal is to provide a production quality compiler with a reusable, library-like structure. However, certain functional language compilers also have LLVM back ends. The two most notable ones are the Glasgow Haskell Compiler~\cite{ghc} and MLton~\cite{mlton-llvm}.
+	
+	\section{Logic defined static program analysis}
+	
+	Originally, static program analyses were defined in a declarative manner using dafa-flow equations, and were implemented imperatively, and optimized manually. This changed with emergence of modern program analysis frameworks. These frameworks use Datalog --- a declarative logic programming language --- as the specification language of the analyses, then they compile the Datalog relations to efficient imperative code. There are many such frameworks, and they are widely used for optimization, verification and understanding of large code bases.
+	
+	\subsection{Doop}
+	
+	Doop~\cite{doop} is static program analysis framework for the Java language. The framework allows for purely declarative definitions of program analyses in Datalog which are not only as precise as analyses implemented in other state-of-the-art frameworks, but also several times faster. The framework is highly sophisticated supporting a wide range of language features. The validity of the framework is backed by several highly scalable and precise analyses like a must analysis~\cite{doop-must} and and a reflection analysis~\cite{doop-reflection}.
+	
+	\subsection{cclyzer}
+	
+	Cclyzer~\cite{cclyzer} is an analysis framework for LLVM bit code. This means, that any language that compiles to LLVM can be analyzed by cclyzer. In the above mentioned article, it was used to define a structure-sensitive points-to analysis for C and C++. The main novelty of the analysis is that it differentiates between object fields and array indices.
+	
+	\subsection{Soufflé}
+	
+	Soufflé~\cite{souffle, souffle-2} is a well-established, industrial-strength Datalog compiler \cite{souffle}. It uses Datalog to define logic-based program analyses, then compiles them to highly-parallelized C++ code. Soufflé facilitates implementing highly scalable data-flow analyses for whole program compilation. Soufflé being a Datalog compiler, instead of an analysis framework makes it suitable for many different applications. For instance it has been used to analyze and optimize the OpenJDK~\cite{souffle-selective-points-to} as well as to disassemble x64 binaries~\cite{souffle-datalog-disassembly}.
 	
 \end{document}

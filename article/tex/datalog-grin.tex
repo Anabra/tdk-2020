@@ -146,12 +146,6 @@
   \section{Points-to analysis}
   
   Points-to analyses are a standard type of data-flow analyses. They build an abstract representation of the heap layout of the program (abstract store) by establishing a mapping between abstract heap locations and the possible values they might contain. For GRIN, the \emph{heap points-to analysis} is a path sensitive, but calling context insensitive points-to analysis originally described in \cite{boquist-phd}. Here, we give a logic defined formalization of the analysis in Datalog, concisely expressed in terms of the CreatedBy analysis (see Section~\ref{sec:created-by}). It is important to note, that this version of the analysis only builds the abstract store (locations $\rightarrow$ values mapping) and not the abstract environment (variable $\rightarrow$ values mapping). This is because in order to define the liveness analysis, it is sufficient to calculate only the abstract store. In Figure~\ref{fig:heap-analysis} we can see the Datalog rules of the heap analysis.
-  
-  Rule \textsc{H-Store} creates a new abstract location for each \pilcode{store} instruction in the GRIN program. This means, the number of abstract locations the analysis keeps track of is statically bounded. In fact it is equal to the number of \pilcode{store} instructions in the program, implying that the heap analysis over-approximates the actual heap layout. This approximation is always safe, which means a location will always be mapped to a set of statically computed values that is a superset of all the possible dynamically occurring values. Note, that the abstract locations are identified by the pointer's name the \pilcode{store} instruction returns.
-  
-  Rule \textsc{H-Update} extends the abstract locations with all the possible values they might be updated with. This is the rule where the complexity comes in due to the \pilcode{CreatedBy} relation. This relation essentially tracks back the pointer to be updated to its origin. This is necessary, since pointers can alias each other, and we must trace them back to the location they point to.
-  
-  The \any symbol in the relations mean that the given argument is irrelevant. Any value can fill that argument, and the it won't be used in the rule.
 
   \begin{figure}[h]
     \begin{mathpar}
@@ -170,6 +164,11 @@
   \label{fig:heap-analysis}
   \end{figure}
 
+  Rule \textsc{H-Store} creates a new abstract location for each \pilcode{store} instruction in the GRIN program. This means, the number of abstract locations the analysis keeps track of is statically bounded. In fact it is equal to the number of \pilcode{store} instructions in the program, implying that the heap analysis over-approximates the actual heap layout. This approximation is always safe, which means a location will always be mapped to a set of statically computed values that is a superset of all the possible dynamically occurring values. Note, that the abstract locations are identified by the pointer's name the \pilcode{store} instruction returns.
+
+	Rule \textsc{H-Update} extends the abstract locations with all the possible values they might be updated with. This is the rule where the complexity comes in due to the \pilcode{CreatedBy} relation. This relation essentially tracks back the pointer to be updated to its origin. This is necessary, since pointers can alias each other, and we must trace them back to the location they point to.
+	
+	The \any symbol in the relations mean that the given argument is irrelevant. Any value can fill that argument, and the it won't be used in the rule.
 
   \section{Created-by analysis} \label{sec:created-by}
   
@@ -267,13 +266,13 @@
   \label{fig:cby-noncase}
   \end{figure}
 
-	\subsection{Case expression related rules}
+	\subsection{Case expression related rules} \label{subsec:cby-case}
 	
 	In Figure~\ref{fig:cby-case} we can see all the rules of thecreated-by analysis related to case expressions and the case alternatives. Rules \textsc{CBy-AltLit}, \textsc{CBy-AltNode} and \textsc{CBy-AltDef} propagate information between the names of (literal, node and default) alternatives and the case expression's scrutinee. That is, the origin of the alternative's name is the same as the origin of the scrutinee. The analysis is path-sensitive, so the \textsc{CBy-AltNode} rule only propagates information from the scrutinee to the alternative if the alternative is possible during the execution of the program. In other words, it must be checked whether the scrutinee's origin can be a node value with the same tag as the node in the alternative's pattern. This is a safe static approximation of the runtime behaviour. Literal-valued and default alternatives are always considered possible.
 	
 	\textsc{CBy-AltParam} propagates origin information from the scrutinee's node arguments into the alternative's paramaters if the tags of the scrutinee's node value and the alternative's pattern are the same.
 	
-	The rules \textsc{CBy-AltNode-Ret}, \textsc{CBy-AltLit-Ret} and \textsc{CBy-AltDef-Ret} propagate the origins of the alternatives' return values into the result of the case expression, if the the given alternative is possible.
+	The rules \textsc{CBy-AltNode-Ret}, \textsc{CBy-AltLit-Ret} and \textsc{CBy-AltDef-Ret} propagate the origins of the alternatives' return values into the result of the case expression, if the given alternative is possible.
 
   \begin{figure}[h]
     	\begin{mathpar}
@@ -337,7 +336,13 @@
   \label{fig:cby-case}
   \end{figure}
 
-  \section{Liveness analysis}
+  \section{Liveness analysis} \label{sec:lva}
+
+	Liveness analysis is a classic backwards data-flow analysis which determines which variables might be live during the execution of the program. Here, we present a path-sensitive and calling context insensitive Datalog formalization of the liveness analysis for GRIN. The analysis computes liveness information, for simple values, function parameters, function return values, node arguments on the stack and node arguments on the heap as well. The different types of liveness information is captured by different liveness relations. This level of granularity is required by the dead data elimination transformation (see Section~\ref{sec:dde}).
+	
+	\subsection{Helper relations}
+	
+	In order to ease the complexity of the liveness analysis we introduce some helper relations. The rules for these relations can be seen in Figure~\ref{fig:lva-helpers}. Most of the rules are straightforward, however it is worth mentioning that the path-sensitivity checks for case alternatives are factored out into the \textsc{PA-Def}, \textsc{PA-Lit} and \textsc{PA-Node} rules.
 
   \begin{figure}[h]
 
@@ -353,17 +358,17 @@
 		\and
 		\DatalogRule{\PossibleAlt{alt}}
 								{\AltDefault{\any}{alt}}
-								{PA-1}
+								{PA-Def}
 		\and
 		\DatalogRule{\PossibleAlt{alt}}
 								{\AltLiteral{\any}{alt}{\any}}
-								{PA-2}
+								{PA-Lit}
 		\and
 		\DatalogRule{\PossibleAlt{alt}}
 								{\Case{r}{scrut} \\\\
 								\Alt{r}{alt}{t} \\\\
 								\NodeCreatedBy{scrut}{t}{scrut'}}
-								{PA-3}
+								{PA-Node}
 		\and
 		\DatalogRule{\PointerOrigin{p}{q}}
 								{\Store{q}{\any} \\\\
@@ -375,70 +380,94 @@
 								\PossibleNodeTag{n}{tag}}
 								{PLT}
 	  \end{mathpar}
-  \caption{Helper relations}
+  \caption{Helper relations for the liveness analysis}
+  \label{fig:lva-helpers}
   \end{figure}
+
+	\section{Liveness of simple values}
+	
+	The rules in Figures~\ref{fig:lva-roots}~and~\ref{fig:lva-simple-vals} describe the liveness data-flow for simple values. If GRIN only had simple values, these rules would be sufficient to calculate the required liveness information. The two root rules, \textsc{LS-Entry} and \textsc{Ext} mark the liveness roots. The roots are the return value of the main entry point, and any arguments to a side-effecting external call. From these roots, the liveness is propagated backwards in the program through rules like \textsc{LS-Move}.
 
   \begin{figure}[h]
     	\begin{mathpar}
       \DatalogRule{\LiveSVal{x}}
                   {\EntryPoint{main} \\\\
                   \ReturnValue{main}{x}}
-                  {LS-1}
+                  {LS-Entry}
       \and
       \DatalogRule{\LiveSVal{x}}
                   {\Call{y}{f} \\\\
                   \CallArgument{y}{\any}{x} \\\\
                   \External{f}{true}{\any}}
-                  {LS-2}
-      \and
+                  {LS-Ext}
+      \end{mathpar}
+  \caption{Root liveness rules}
+  \label{fig:lva-roots}
+  \end{figure}
+
+  The \textsc{LS-AltRet} rule propagates simple liveness from the result of the case expression to the return value of the alternative, given that the alternative is possible. \textsc{LS-Scrut} is also a rule related to case expressions. It propagates simple liveness information from the alternative back to the scrutinee.
+  
+  Rules \textsc{LS-FunRet} and \textsc{LFS-FunRet} propagate simple liveness from the result of a function call back to the function's return value. The observant reader might notice that these relation could have been expressed by using solely the \textsc{ReturnValue} relation. However, this is only true for regular functions. Since external functions do not have definitions, we need to introduce a special relation, \textsc{LiveFunRetSimple} that captures the liveness of their return values.
+
+	\begin{figure}[h]
+			\begin{mathpar}
       \DatalogRule{\LiveSVal{x}}
               {\LiveSVal{y} \\\\
               \Move{y}{x}}
-              {LS-3}
+              {LS-Move}
       \and
       % TODO: alt helper relation
       \DatalogRule{\LiveSVal{ret}}
                   {\LiveSVal{res} \\ \PossibleAlt{alt} \\ \ReturnValue{alt}{ret} \\\\
                   (\Alt{res}{alt}{\any} \lor \AltLiteral{res}{alt}{\any} \lor \AltDefault{res}{alt})}
-                  {LS-4}
+                  {LS-AltRet}
       \and
       \DatalogRule{\LiveSVal{scrut}}
                   {\LiveSVal{alt} \\ \PossibleAlt{alt} \\ \Case{res}{scrut} \\\\
                   (\Alt{res}{alt}{\any} \lor \AltLiteral{res}{alt}{\any} \lor \AltDefault{res}{alt})}
-                  {LS-5}
+                  {LS-Scrut}
       \and
       \DatalogRule{\LiveFunRetSimple{f}}
                   {\LiveSVal{y} \\\\
                   \Call{y}{f}}
-                  {LFS-3}
+                  {LFS-FunRet}
       \and
       \DatalogRule{\LiveSVal{ret}}
                   {\LiveFunRetSimple{f} \\\\
                   \ReturnValue{f}{ret}}
-                  {LS-6}
+                  {LS-FunRet}
       \and
       \DatalogRule{\LiveSVal{x}}
                   {\LiveSVal{param} \\\\
                   \FunctionParameter{f}{i}{param} \\\\
-                  \Call{y}{f} \\\\
+                  \Call{y}{f} \\
                   \CallArgument{y}{i}{x}}
-                  {LS-7}
+                  {LS-CallArg}
       \and
       \DatalogRule{\LiveSVal{x}}
                   {\LiveFunRetSimple{f_{ext}} \\\\
                   \External{f_{ext}}{\any}{\any} \\\\
                   \Call{y}{f_{ext}} \\\\
                   \CallArgument{y}{\any}{x}}
-                  {LS-8}
+                  {LS-ExtArg}
       \and
       \DatalogRule{\LiveSVal{x}}
                   {\LiveNodeArg{n}{t}{i} \\\\
                   \Node{n}{t} \\\\
                   \NodeArgument{n}{i}{x}}
-                  {LS-9}
+                  {LS-NodeArg}
 	  \end{mathpar}
   \caption{Liveness rules for simple values}
+  \label{fig:lva-simple-vals}
   \end{figure}
+
+	The rules \textsc{LS-CallArg} and \textsc{LS-ExtArg} propagate simple liveness through regular function call arguments and external function call arguments respectively.
+	
+	Finally, rule \textsc{LS-NodeArg} propagates the node argument's liveness back to the simple value.
+	
+	\subsection{Liveness of node values}
+	
+	Figure~ref{fig:lva-nodes} shows the rules for the liveness analysis of node values on the stack. \textsc{LNA-AsPat} propagates the liveness of node arguments from the @pattern's parameters to the node with the same tag contained in the variable on the right-hand side of the binding. On the other hand, \textsc{LNA-AsPat-Alias} propagates all node argument liveness from the alias of the @pattern back to the variable on the right-hand side. \textsc{LNA-Move} is very similar to \textsc{LNA-AsPat-Alias}, just for variable copying.
 
   \begin{figure}[h]
     \begin{mathpar}
@@ -446,65 +475,67 @@
 								{\LiveSVal{x} \\\\
 								\NodeParameter{as}{i}{x} \\\\
 								\NodePattern{as}{t}{n}}
-								{LNA-1}
+								{LNA-AsPat}
 		\and
 		\DatalogRule{\LiveNodeArg{n}{t}{i}}
 								{\LiveNodeArg{as}{t}{i} \\\\
 								\NodePattern{as}{t}{n}}
-								{LNA-2}
-		\and
-		\DatalogRule{\LiveNodeArg{n}{t}{i}}
-								{\LiveSVal(x) \\\\
-								\NodePattern{as}{t}{n} \\\\
-								\NodeParameter{as}{i}{x}}
-								{LNA-3}
+								{LNA-AsPat-Alias}
 		\and
 		\DatalogRule{\LiveNodeArg{m}{t}{i}}
 								{\LiveNodeArg{n}{t}{i} \\\\
 								\Move{n}{m}}
-								{LNA-4}
+								{LNA-Move}
     \end{mathpar}
   \caption{Liveness rules for node values}
+  \label{fig:lva-nodes}
   \end{figure}
+
+	\subsection{Liveness of node-valued case expressions}
+	
+	The rules in Figure~\ref{fig:lva-case} show how liveness information flows through nodes in case expressions. \textsc{LNA-Scrut-Name} describes the node liveness data-flow from the alternative's name back into the scrutinee. \textsc{LNA-Scrut-Pat} is similar, but the source of liveness is the alternative's node pattern instead.
+	
+	\textsc{LNA-AltNode} propagates node liveness from the result of the case expression into the alternative's return value, given that the alternative is possible and that the result and the return value have a common a tag. \textsc{LNA-AltLitDef} is the analogue rule for alternatives with literal and default patterns.
 
   \begin{figure}[h]
     \begin{mathpar}
     \DatalogRule{\LiveNodeArg{scrut}{t}{i}}
 								{\LiveNodeArg{alt}{t}{i} \\\\
-								\Case{r}{scrut} \\\\
-								\Alt{r}{alt}{t} \\\\
+								\Case{r}{scrut} \\
+								\Alt{r}{alt}{t} \\
 								\AltParameter{r}{t}{i}{\any}}
-								{LNA-5}
+								{LNA-Scrut-Name}
 		\and
 		\DatalogRule{\LiveNodeArg{scrut}{t}{i}}
 								{\LiveSVal{x} \\\\
-								\Case{r}{scrut} \\\\
+								\Case{r}{scrut} \\
 								\AltParameter{r}{t}{i}{x}}
-								{LNA-6}
+								{LNA-Scrut-Pat}
 		\and
-		% TODO: maybe NodeCreatedBy?
 		\DatalogRule{\LiveNodeArg{ret}{t_{res}}{i}}
 								{\LiveNodeArg{res}{t_{res}}{i} \\\\
-								\Case{res}{scrut} \\\\
-								\Alt{res}{alt}{t_{alt}} \\\\
+								\Case{res}{scrut} \\
+								\Alt{res}{alt}{t_{alt}} \\
 								\ReturnValue{alt}{ret} \\\\
-								\PossibleAlt{alt} \\\\
-								\CreatedBy{ret}{ret'} \\\\
-								\Node{ret'}{t_{res}}}
-								{LNA-7}
+								\PossibleAlt{alt} \\
+								\NodeCreatedBy{ret}{t_{res}}{ret'}}
+								{LNA-AltNode}
 		\and
-		% TODO: maybe NodeCreatedBy?
 		\DatalogRule{\LiveNodeArg{ret}{t_{res}}{i}}
 								{\LiveNodeArg{res}{t_{res}}{i} \\\\
-								\Case{res}{\any} \\\\
+								\Case{res}{\any} \\
 								(\AltLiteral{res}{alt}{\any} \lor \AltDefault{res}{alt}) \\\\
-								\ReturnValue{alt}{ret} \\\\
-								\CreatedBy{ret}{ret'} \\\\
-								\Node{ret'}{t_{res}}}
-								{LNA-8}
+								\ReturnValue{alt}{ret} \\
+								\NodeCreatedBy{ret}{t_{res}}{ret'}}
+								{LNA-AltLitDef}
     \end{mathpar}
-  \caption{Liveness rules for case expressions}
+  \caption{Liveness rules for node-valued case expressions}
+  \label{fig:lva-case}
   \end{figure}
+
+	\subsection{Liveness of node-valued functions}
+
+	In Figure~\ref{fig:lva-function} we can see the different rules for propagating node argument liveness \emph{into} functions with node-valued return values (\textsc{LFN}), \emph{out of} functions with node-valued return values (\textsc{LNA-FunRet}) and \emph{out of} functions with node-valued parameters (\textsc{LNA-Call}).
 
   \begin{figure}[h]
     \begin{mathpar}
@@ -516,18 +547,23 @@
 		\DatalogRule{\LiveNodeArg{r}{t}{i}}
 								{\LiveFunRetNodeArg{f}{t}{i} \\\\
 								\ReturnValue{f}{r}}
-								{LNA-9}
+								{LNA-FunRet}
 		\and
 		\DatalogRule{\LiveNodeArg{x}{t}{i}}
 								{\LiveNodeArg{param}{t}{i} \\\\
 								\FunctionParameter{f}{j}{param} \\\\
-								\Call{y}{f} \\\\
+								\Call{y}{f} \\
 								\CallArgument{y}{j}{x}}
-								{LNA-10}
+								{LNA-Call}
     \end{mathpar}
-  \caption{Liveness rules for functions}
+  \caption{Liveness rules for node-valued functions}
+  \label{fig:lva-function}
   \end{figure}
 
+	\subsection{Liveness of heap objects}
+	
+	The rules in Figure~\ref{fig:lva-heap} describe how the liveness of node values on the heap are computed. Since information flows backwards, the \pilcode{fetch} operation propagates node argument liveness \emph{onto} the heap as shown by rule \textsc{LHN}. Similarly, \pilcode{store} propagates node liveness \emph{from} the heap into the variable on the left-hand side (\textsc{LNA-Store}), just like the \pilcode{update} operation which also flows liveness \emph{from} the heap into the variable used for updating (\textsc{LNA-Update}).
+	
   \begin{figure}[h]
     \begin{mathpar}
     \DatalogRule{\LiveHeapNodeArg{q}{t}{i}}
@@ -542,16 +578,17 @@
 								\Store{q}{n} \\\\
 								\PointerOrigin{p}{q} \\\\
 								\PossibleNodeTag{n}{t}}
-								{LNA-11}
+								{LNA-Store}
 		\and
 		\DatalogRule{\LiveNodeArg{n}{t}{i}}
 								{\LiveHeapNodeArg{q}{t}{i} \\\\
 								\Update{\any}{p}{n} \\\\
 								\PointerOrigin{p}{q} \\\\
 								\PossibleNodeTag{n}{t}}
-								{LNA-12}
+								{LNA-Update}
     \end{mathpar}
   \caption{Liveness rules for heap operations}
+  \label{fig:lva-heap}
   \end{figure}
 
 
