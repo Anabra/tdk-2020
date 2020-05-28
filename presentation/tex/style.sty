@@ -33,6 +33,8 @@
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
 
+\usepackage{mathpartir, proof}
+
 \DeclarePairedDelimiter\set\{\}
 
 \hypersetup{%
@@ -47,6 +49,7 @@
 \usepackage{lstautogobble}
 \definecolor{identifierColor}{rgb}{0.65,0.16,0.16}
 \definecolor{keywordColor}{rgb}{0.65,0.20,0.90}
+\definecolor{liveColor}{rgb}{0.85,0.16,0.16}
 \lstnewenvironment{code}
 {	\lstset
 	{ language   			= Haskell
@@ -61,6 +64,7 @@
 		, keywordstyle    = \color{violet}
 		, morekeywords    = {}
 		, escapechar      = \%
+		, escapeinside    = \%\%
 	}
 }
 {}
@@ -247,3 +251,61 @@
 	}
 
 }
+
+% Datalog relation definitions
+\newcommand{\any}{*}
+\newcommand{\rulename}[1]{\; (\textsc{#1})}
+\newcommand{\InferRule}[3]{\inferrule{#1}{#2} \rulename{#3}}
+\newcommand{\DatalogRule}[3]{\inferrule{#2}{#1} \rulename{#3}}
+\newcommand{\EmissionRule}[3]{\DatalogRule{#1}{#2}{#3}}
+%\let \EmissionRule \DatalogRule
+\newcommand{\EmissionRuleL}[3]{\mprset{flushleft} \EmissionRule{#1}{#2}{#3} \mprset{center}}
+
+\newcommand{\UnaryRelation}[2]{\text{\texttt{#1}}(#2)}
+\newcommand{\BinaryRelation}[3]{\text{\texttt{#1}}(#2,#3)}
+\newcommand{\TernaryRelation}[4]{\text{\texttt{#1}}(#2,#3,#4)}
+\newcommand{\QuaternaryRelation}[5]{\text{\texttt{#1}}(#2,#3,#4,#5)}
+
+\newcommand {\EntryPoint}[1]{\UnaryRelation{EntryPoint}{#1}}
+\newcommand {\ReachableCode}[1]{\UnaryRelation{ReachableCode}{#1}}
+\newcommand {\FunName}[1]{\UnaryRelation{FunName}{#1}}
+\newcommand {\PossibleAlt}[1]{\UnaryRelation{PossibleAlt}{#1}}
+\newcommand {\Effectful}[1]{\UnaryRelation{Effectful}{#1}}
+\newcommand {\LiveSVal}[1]{\UnaryRelation{LiveSVal}{#1}}
+\newcommand {\LiveFunRetSimple}[1]{\UnaryRelation{LiveFunRetSimple}{#1}}
+
+\newcommand {\Move}[2]{\BinaryRelation{Move}{#1}{#2}}
+\newcommand {\Node}[2]{\BinaryRelation{Node}{#1}{#2}}
+\newcommand {\Fetch}[2]{\BinaryRelation{Fetch}{#1}{#2}}
+\newcommand {\Store}[2]{\BinaryRelation{Store}{#1}{#2}}
+%TODO: is renewing this OK?
+\renewcommand {\Call}[2]{\BinaryRelation{Call}{#1}{#2}}
+\newcommand {\Case}[2]{\BinaryRelation{Case}{#1}{#2}}
+\newcommand {\AltDefault}[2]{\BinaryRelation{AltDefault}{#1}{#2}}
+\newcommand {\ReturnValue}[2]{\BinaryRelation{ReturnValue}{#1}{#2}}
+\newcommand {\FirstInst}[2]{\BinaryRelation{FirstInst}{#1}{#2}}
+\newcommand {\NextInst}[2]{\BinaryRelation{NextInst}{#1}{#2}}
+\newcommand {\CodeNameInst}[2]{\BinaryRelation{CodeNameInst}{#1}{#2}}
+\newcommand {\Heap}[2]{\BinaryRelation{Heap}{#1}{#2}}
+\newcommand {\CreatedBy}[2]{\BinaryRelation{CreatedBy}{#1}{#2}}
+\newcommand {\PossibleNodeTag}[2]{\BinaryRelation{PossibleNodeTag}{#1}{#2}}
+\newcommand {\PointerOrigin}[2]{\BinaryRelation{PointerOrigin}{#1}{#2}}
+\newcommand {\PossibleLocTag}[2]{\BinaryRelation{PossibleLocTag}{#1}{#2}}
+
+\newcommand {\External}[3]{\TernaryRelation{External}{#1}{#2}{#3}}
+\newcommand {\ExternalParam}[3]{\TernaryRelation{ExternalParam}{#1}{#2}{#3}}
+\newcommand {\LitAssign}[3]{\TernaryRelation{LitAssign}{#1}{#2}{#3}}
+\newcommand {\NodeArgument}[3]{\TernaryRelation{NodeArgument}{#1}{#2}{#3}}
+\newcommand {\Update}[3]{\TernaryRelation{Update}{#1}{#2}{#3}}
+\newcommand {\CallArgument}[3]{\TernaryRelation{CallArgument}{#1}{#2}{#3}}
+\newcommand {\NodePattern}[3]{\TernaryRelation{NodePattern}{#1}{#2}{#3}}
+\newcommand {\NodeParameter}[3]{\TernaryRelation{NodeParameter}{#1}{#2}{#3}}
+\newcommand {\FunctionParameter}[3]{\TernaryRelation{FunctionParameter}{#1}{#2}{#3}}
+\newcommand {\Alt}[3]{\TernaryRelation{Alt}{#1}{#2}{#3}}
+\newcommand {\AltLiteral}[3]{\TernaryRelation{AltLiteral}{#1}{#2}{#3}}
+\newcommand {\NodeCreatedBy}[3]{\TernaryRelation{NodeCreatedBy}{#1}{#2}{#3}}
+\newcommand {\LiveNodeArg}[3]{\TernaryRelation{LiveNodeArg}{#1}{#2}{#3}}
+\newcommand {\LiveFunRetNodeArg}[3]{\TernaryRelation{LiveFunRetNodeArg}{#1}{#2}{#3}}
+\newcommand {\LiveHeapNodeArg}[3]{\TernaryRelation{LiveHeapNodeArg}{#1}{#2}{#3}}
+
+\newcommand {\AltParameter}[4]{\QuaternaryRelation{AltParameter}{#1}{#2}{#3}{#4}}
