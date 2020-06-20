@@ -1,0 +1,9 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nf}{grinMain} \PYG{o+ow}{=}
+  \PYG{n}{t1} \PYG{o+ow}{\PYGZlt{}\PYGZhy{}} \PYG{n}{store} \PYG{p}{(}\PYG{k+kt}{CInt} \PYG{l+m+mi}{1}\PYG{p}{)}
+  \PYG{n}{t2} \PYG{o+ow}{\PYGZlt{}\PYGZhy{}} \PYG{n}{store} \PYG{p}{(}\PYG{k+kt}{CInt} \PYG{l+m+mi}{10}\PYG{p}{)}
+  \PYG{n}{t3} \PYG{o+ow}{\PYGZlt{}\PYGZhy{}} \PYG{n}{store} \PYG{p}{(}\PYG{k+kt}{Fupto} \PYG{n}{t1} \PYG{n}{t2}\PYG{p}{)}
+  \PYG{n}{t4} \PYG{o+ow}{\PYGZlt{}\PYGZhy{}} \PYG{n}{store} \PYG{p}{(}\PYG{k+kt}{Fsum} \PYG{n}{t3}\PYG{p}{)}
+  \PYG{p}{(}\PYG{k+kt}{CInt} \PYG{n}{r}\PYG{p}{)} \PYG{o+ow}{\PYGZlt{}\PYGZhy{}} \PYG{n}{eval} \PYG{n}{t4}
+  \PYG{n}{\PYGZus{}prim\PYGZus{}int\PYGZus{}print} \PYG{n}{r}
+\end{Verbatim}

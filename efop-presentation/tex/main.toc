@@ -1,0 +1,4 @@
+\beamer@sectionintoc {1}{GRIN \'attekint\'es}{3}{0}{1}
+\beamer@sectionintoc {2}{Datalog \'attekint\'es}{9}{0}{2}
+\beamer@sectionintoc {3}{Struktur\IeC {\'a}lis holt-k\IeC {\'o}d elt\IeC {\'a}vol\IeC {\'\i }t\IeC {\'a}s}{18}{0}{3}
+\beamer@sectionintoc {4}{M\'er\'esi eredm\'enyek}{52}{0}{4}

@@ -1,0 +1,10 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nf}{main} \PYG{o+ow}{=} \PYG{n}{sum} \PYG{p}{(}\PYG{n}{upto} \PYG{l+m+mi}{0} \PYG{l+m+mi}{10}\PYG{p}{)}
+
+\PYG{n+nf}{upto} \PYG{n}{n} \PYG{n}{m}
+  \PYG{o}{|} \PYG{n}{n} \PYG{o}{\PYGZgt{}} \PYG{n}{m} \PYG{o+ow}{=} \PYG{k+kt}{[]}
+  \PYG{o}{|} \PYG{n}{otherwise} \PYG{o+ow}{=} \PYG{n}{n} \PYG{k+kt}{:} \PYG{n}{upto} \PYG{p}{(}\PYG{n}{n}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{n}{m}
+
+\PYG{n+nf}{sum} \PYG{k+kt}{[]}     \PYG{o+ow}{=} \PYG{l+m+mi}{0}
+\PYG{n+nf}{sum} \PYG{p}{(}\PYG{n}{x}\PYG{k+kt}{:}\PYG{n}{xs}\PYG{p}{)} \PYG{o+ow}{=} \PYG{n}{x} \PYG{o}{+} \PYG{n}{sum} \PYG{n}{xs}
+\end{Verbatim}
