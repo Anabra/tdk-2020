@@ -1,0 +1,11 @@
+*.aux
+*.log
+*.nav
+*.snm
+*.gz
+*.toc
+*.vrb
+*.out
+*.pygtex
+_minted-main/
+template-en/
