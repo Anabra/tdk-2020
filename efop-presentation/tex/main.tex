@@ -19,7 +19,7 @@
 	Eötvös Loránd Tudom\'anyegyetem \\ Budapest
 }
 
-\date{TDK-2020} % (optional)
+\date{EFOP \\ 2019/20/2} % (optional)
 
 
 
@@ -37,28 +37,6 @@
 
 
 \section{GRIN \'attekint\'es}
-
-\begin{frame}[fragile]
-	\frametitle{Mi\'ert funkcion\'alis?}
-	
-	\begin{vfitemize}
-		\item Deklarat\'iv
-			\begin{itemize}
-				\item[pro:] magasabb absztrakci\'os szinten val\'o programoz\'as
-			\end{itemize}
-		\item Kompozicionalit\'as \\
-			\begin{itemize}
-				\item[pro:] kis programokat k\"onnyed\'en lehet \"osszeilleszteni
-				\item[con:] sok f\"uggv\'enyh\'iv\'ast eredm\'enyez
-			\end{itemize}
-		\item F\"uggv\'enyek elsőrendű \'ert\'ekk\'ent
-			\begin{itemize}
-				\item[pro:] magasabb rendű függvények
-				\item[con:] ismeretlen függvényhívások
-			\end{itemize}
-	\end{vfitemize}
-
-\end{frame}
 
 
 \begin{frame}
@@ -197,19 +175,6 @@
 \end{frame}
 
 \begin{frame}
-\frametitle{Egyszerű points-to elemzés Datalog-ban}
-	\begin{mathpar}
-		\InferRule{\Store{p}{n}}
-		{\Heap{p}{n}}
-		{H-Store}
-		\and
-		\InferRule{\Update{\any}{p}{n}}
-		{\Heap{p}{n}}
-		{H-Update'}
-	\end{mathpar}
-\end{frame}
-
-\begin{frame}
 \frametitle{A GRIN nyelv Datalog modellje (részlet)}
       \begin{mathpar}
   	\EmissionRule{\Store{p}{n}}
@@ -235,54 +200,18 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{Valódi points-to elemzés Datalog-ban}
-    \begin{mathpar}
+\frametitle{Egyszerű points-to elemzés Datalog-ban}
+\begin{mathpar}
 	\InferRule{\Store{p}{n}}
 	{\Heap{p}{n}}
 	{H-Store}
 	\and
-	\only<1>
-	{
-		\InferRule{\Update{\any}{p}{n}}
-		{\Heap{p}{n}}
-		{H-Update'}
-	}
-	\only<2>
-	{
-		\InferRule{\Update{\any}{p}{n} \\\\
-			\CreatedBy{p}{p'} \\\\
-			\Heap{p'}{\any}}
-		{\Heap{p'}{n}}
-		{H-Update}
-	}
+	\InferRule{\Update{\any}{p}{n}}
+	{\Heap{p}{n}}
+	{H-Update'}
 \end{mathpar}
 \end{frame}
 
-\begin{frame}
-\frametitle{Created-by elemzés (részlet)}
-	\begin{mathpar}
-		\InferRule{\Node{n}{\any}}
-		{\CreatedBy{n}{n}}
-		{C-Node}
-		\and
-		\InferRule{\Store{p}{\any}}
-		{\CreatedBy{p}{p}}
-		{C-Store}
-		\pause
-		\and
-		\InferRule{\Move{v}{n} \\\\
-	    \CreatedBy{n}{n'}}
-		{\CreatedBy{v}{n'}}
-		{C-Move}
-		\and
-		\DatalogRule{\CreatedBy{v}{n'}}
-	    {\Fetch{v}{p} \\\\
-			\CreatedBy{p}{p'} \\\\
-			\Heap{p'}{n} \\\\
-			\CreatedBy{n}{n'}}
-		{C-Fetch}
-	\end{mathpar}
-\end{frame}
 
 \section{Strukturális holt-kód eltávolítás}
 
@@ -432,85 +361,6 @@
 		\dots
 	\end{minipage}
 \end{center}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Created-by elemzés eredménye}
-
-\begin{center}
-	\begin{minipage}{0.50\textwidth}
-		\begin{minipage}{0.50\textwidth}
-			\begin{haskellcode}
-			length p =
-			  xs <- fetch p
-			  r <- case xs of
-			    (Cons y ys) @ alt1 ->
-			      l1 <- length ys
-			      k1 <- pure 1
-			      l2 <- int_add l1 k1
-			      pure l2
-			    (Nil) @ alt2 ->
-			      k0 <- pure 0
-			      pure k0
-			  pure r
-			\end{haskellcode}
-		\end{minipage}
-	\end{minipage}
-	\hfill
-	\begin{minipage}{0.475\textwidth}
-		\begin{tcolorbox}[tab2,tabularx={l|r}]
-			Var			  & Producers \\
-			\hline\hline
-			\pilcode{p}   & \dots \\\hline
-			\pilcode{y}   & \dots \\\hline
-			\pilcode{xs}  & $Nil[\dots], Cons[\dots]$ \\\hline
-			\pilcode{ys}  & $Nil[\dots], Cons[\dots]$ \\\hline\hline
-			\pilcode{l1}  & $\{l2,k0\}$	\\\hline
-			\pilcode{k1}  & $\{k1\}$ \\\hline
-			\pilcode{l2}  & $\{l2\}$ \\\hline
-			\pilcode{k0}  & $\{k0\}$ \\\hline
-			\pilcode{r}   & $\{l2,k0\}$	\\
-		\end{tcolorbox}
-	\end{minipage}
-\end{center}
-
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Élőségi elemzés forrásai}
-	\begin{mathpar}
-		\DatalogRule{\LiveSVal{x}}
-		{\EntryPoint{main} \\\\
-			\ReturnValue{main}{x}}
-		{LS-Entry}
-		\and
-		\DatalogRule{\LiveSVal{x}}
-		{\Call{y}{f} \\\\
-			\CallArgument{y}{\any}{x} \\\\
-			\External{f}{true}{\any}}
-		{LS-Ext}
-	\end{mathpar}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Élőségi elemzés egyéb szabályai (részlet)}
-	\begin{mathpar}
-	\DatalogRule{\LiveSVal{x}}
-	{\LiveSVal{y} \\\\
-		\Move{y}{x}}
-	{LS-Move}
-	\and
-	\DatalogRule{\LiveSVal{x}}
-	{\LiveNodeArg{n}{t}{i} \\\\
-		\Node{n}{t} \\\\
-		\NodeArgument{n}{i}{x}}
-	{LS-NodeArg}
-   \and
-	\DatalogRule{\LiveFunRetSimple{f}}
-	{\LiveSVal{y} \\\\
-		\Call{y}{f}}
-	{LFS-FunRet}
-	\end{mathpar}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -745,17 +595,7 @@
 	% second solution is to keep each C & P's structure as it is, but dummify P1
 	
 	\node<11> [shape=circle,draw=black,fill=yellow] (P1)                 {\pilcode{upto}};
-	
-	\pause
-	
-	% third solution is to restructure C2, but keep the original pattern as well (code duplication, needs IR improvement)
-	
-	\node<12> [shape=circle,draw=black,dashed] (P1)                 {\pilcode{upto}};
-	\node<12> [shape=circle,draw=black,fill=lightgray] (P2) [right =of P1]  {\pilcode{upto}};
-	
-	\node<12> [shape=circle,draw=black,pattern=north east lines, dashed] (C2) [below =of Middle]  {\pilcode{len}};
-	\node<12> [shape=circle,draw=black,dashed] (C1) [left =of C2]       {\pilcode{len}};
-	\node<12> [shape=circle,draw=black,fill=lightgray] (C3) [right =of C2]      {\pilcode{sum}};
+
 	
 	
 	
