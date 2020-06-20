@@ -269,37 +269,7 @@
 		    (Nil) ->
 		      pure 0
   		\end{haskellcode}
-	  	\onslide<3>
-	  	\begin{haskellcode}
-  		length p =
-  		  xs <- fetch p
-  		  case xs of
-  		    (Cons y ys) ->
-  		      l1 <- length ys
-  		      k1 <- pure 1
-  		      l2 <- int_add l1 k1
-  		      pure l2
-  		    (Nil) ->
-  		      k0 <- pure 0
-  		      pure k0
-  		  pure r
-	  	\end{haskellcode}
-  		\onslide<4>
-  		\begin{haskellcode}
-		length p =
-		  xs <- fetch p
-		  r <- case xs of
-		    (Cons y ys) ->
-		      l1 <- length ys
-		      k1 <- pure 1
-		      l2 <- int_add l1 k1
-		      pure l2
-		    (Nil) ->
-		      k0 <- pure 0
-		      pure k0
-		  pure r
-  		\end{haskellcode}
-  		\onslide<5>
+  		\onslide<3>
   		\begin{haskellcode}
 		length p =
 		  xs <- fetch p
