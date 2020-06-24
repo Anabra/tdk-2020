@@ -268,7 +268,7 @@
 
 	\subsection{Case expression related rules} \label{subsec:cby-case}
 	
-	In Figure~\ref{fig:cby-case} we can see all the rules of thecreated-by analysis related to case expressions and the case alternatives. Rules \textsc{CBy-AltLit}, \textsc{CBy-AltNode} and \textsc{CBy-AltDef} propagate information between the names of (literal, node and default) alternatives and the case expression's scrutinee. That is, the origin of the alternative's name is the same as the origin of the scrutinee. The analysis is path-sensitive, so the \textsc{CBy-AltNode} rule only propagates information from the scrutinee to the alternative if the alternative is possible during the execution of the program. In other words, it must be checked whether the scrutinee's origin can be a node value with the same tag as the node in the alternative's pattern. This is a safe static approximation of the runtime behaviour. Literal-valued and default alternatives are always considered possible.
+	In Figure~\ref{fig:cby-case} we can see all the rules of the created-by analysis related to case expressions and the case alternatives. Rules \textsc{CBy-AltLit}, \textsc{CBy-AltNode} and \textsc{CBy-AltDef} propagate information between the names of (literal, node and default) alternatives and the case expression's scrutinee. That is, the origin of the alternative's name is the same as the origin of the scrutinee. The analysis is \emph{semi-path-insensitive}, which means it doesn't restrict the scrutinee's possible values in the alternatives, however it only propagates the restricted values into the alternatives' names. Furthermore, impossible alternatives are not analyzed, so the \textsc{CBy-AltNode} rule only propagates information from the scrutinee to the alternative if the alternative is possible during the execution of the program. In other words, it must be checked whether the scrutinee's origin can be a node value with the same tag as the node in the alternative's pattern. This is a safe static approximation of the runtime behaviour. Literal-valued and default alternatives are always considered possible.
 	
 	\textsc{CBy-AltParam} propagates origin information from the scrutinee's node arguments into the alternative's paramaters if the tags of the scrutinee's node value and the alternative's pattern are the same.
 	
@@ -338,18 +338,18 @@
 
   \section{Liveness analysis} \label{sec:lva}
 
-	Liveness analysis is a classic backwards data-flow analysis which determines which variables might be live during the execution of the program. Here, we present a path-sensitive and calling context insensitive Datalog formalization of the liveness analysis for GRIN. The analysis computes liveness information, for simple values, function parameters, function return values, node arguments on the stack and node arguments on the heap as well. The different types of liveness information is captured by different liveness relations. This level of granularity is required by the dead data elimination transformation (see Section~\ref{sec:dde}).
+	Liveness analysis is a classic backwards data-flow analysis which determines which variables might be live during the execution of the program. Here, we present a calling context insensitive Datalog formalization of the liveness analysis for GRIN. The analysis computes liveness information, for simple values, function parameters, function return values, node arguments on the stack and node arguments on the heap as well. The different types of liveness information is captured by different liveness relations. This level of granularity is required by the dead data elimination transformation (see Section~\ref{sec:dde}).
 	
 	\subsection{Helper relations}
 	
-	In order to ease the complexity of the liveness analysis we introduce some helper relations. The rules for these relations can be seen in Figure~\ref{fig:lva-helpers}. Most of the rules are straightforward, however it is worth mentioning that the path-sensitivity checks for case alternatives are factored out into the \textsc{PA-Def}, \textsc{PA-Lit} and \textsc{PA-Node} rules.
+	In order to ease the complexity of the liveness analysis we introduce some helper relations. The rules for these relations can be seen in Figure~\ref{fig:lva-helpers}. Most of the rules are straightforward, however it is worth mentioning that the case alternative possiblity checks are factored out into the \textsc{PA-Def}, \textsc{PA-Lit} and \textsc{PA-Node} rules.
 
   \begin{figure}[h]
 
     \begin{mathpar}
 		\DatalogRule{\NodeCreatedBy{n}{t}{n'}}
 								{\Node{n'}{t} \\\\
-								\CreatedBy{v}{v'}}
+								\CreatedBy{n}{n'}}
 								{NCBy}
 		\and
 		\DatalogRule{\PossibleNodeTag{n}{t}}
@@ -377,7 +377,7 @@
 		\and
 		\DatalogRule{\PossibleLocTag{p}{t}}
 								{\Heap{p}{n} \\\\
-								\PossibleNodeTag{n}{tag}}
+								\PossibleNodeTag{n}{t}}
 								{PLT}
 	  \end{mathpar}
   \caption{Helper relations for the liveness analysis}
@@ -467,7 +467,7 @@
 	
 	\subsection{Liveness of node values}
 	
-	Figure~ref{fig:lva-nodes} shows the rules for the liveness analysis of node values on the stack. \textsc{LNA-AsPat} propagates the liveness of node arguments from the @pattern's parameters to the node with the same tag contained in the variable on the right-hand side of the binding. On the other hand, \textsc{LNA-AsPat-Alias} propagates all node argument liveness from the alias of the @pattern back to the variable on the right-hand side. \textsc{LNA-Move} is very similar to \textsc{LNA-AsPat-Alias}, just for variable copying.
+	Figure~\ref{fig:lva-nodes} shows the rules for the liveness analysis of node values on the stack. \textsc{LNA-AsPat} propagates the liveness of node arguments from the @pattern's parameters to the node with the same tag contained in the variable on the right-hand side of the binding. On the other hand, \textsc{LNA-AsPat-Alias} propagates all node argument liveness from the alias of the @pattern back to the variable on the right-hand side. \textsc{LNA-Move} is very similar to \textsc{LNA-AsPat-Alias}, just for variable copying.
 
   \begin{figure}[h]
     \begin{mathpar}
