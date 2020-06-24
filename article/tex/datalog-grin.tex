@@ -145,7 +145,7 @@
 
   \section{Points-to analysis}
   
-  Points-to analyses are a standard type of data-flow analyses. They build an abstract representation of the heap layout of the program (abstract store) by establishing a mapping between abstract heap locations and the possible values they might contain. For GRIN, the \emph{heap points-to analysis} is a path sensitive, but calling context insensitive points-to analysis originally described in \cite{boquist-phd}. Here, we give a logic defined formalization of the analysis in Datalog, concisely expressed in terms of the CreatedBy analysis (see Section~\ref{sec:created-by}). It is important to note, that this version of the analysis only builds the abstract store (locations $\rightarrow$ values mapping) and not the abstract environment (variable $\rightarrow$ values mapping). This is because in order to define the liveness analysis, it is sufficient to calculate only the abstract store. In Figure~\ref{fig:heap-analysis} we can see the Datalog rules of the heap analysis.
+  Points-to analyses are a standard type of data-flow analyses. They build an abstract representation of the heap layout of the program (abstract store) by establishing a mapping between abstract heap locations and the possible values they might contain. For GRIN, the \emph{heap points-to analysis} is a semi-path-sensitive (see \ref{subsec:cby-case}, but calling context insensitive points-to analysis originally described in \cite{boquist-phd}. Here, we give a logic defined formalization of the analysis in Datalog, concisely expressed in terms of the CreatedBy analysis (see Section~\ref{sec:created-by}). It is important to note, that this version of the analysis only builds the abstract store (locations $\rightarrow$ values mapping) and not the abstract environment (variable $\rightarrow$ values mapping). This is because in order to define the liveness analysis, it is sufficient to calculate only the abstract store. In Figure~\ref{fig:heap-analysis} we can see the Datalog rules of the heap analysis.
 
   \begin{figure}[h]
     \begin{mathpar}
@@ -175,7 +175,7 @@
   The created-by analysis answers the question: \emph{What program point was a given variable created by?}. It traces back variables to their possible origins. 
   For example a variable might have been an alt parameter inside a case expression scrutinizing a node fetched from the heap put their by a function, and so on. We would like to trace back such variables to their \emph{original} definition sites. It is important to mention that a variable may have multiple possible origins since the control-flow can branch in case expressions. For instance, the result of a case expression could have been created in any of the alternatives.
   
-  In this section, we present a Datalog formalization of a path sensitive and calling context insensitive created-by analysis for GRIN.
+  In this section, we present a Datalog formalization of a semi-path-sensitive (see \ref{subsec:cby-case}) and calling context insensitive created-by analysis for GRIN.
   
   The created-by analysis was originally described by Remi Turk \cite{remi-masters} who introduced it as an extended points-to analysis. 
   
