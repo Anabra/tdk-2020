@@ -88,38 +88,7 @@
 		sum (x:xs) = x + sum xs
 	\end{haskellcode}
 \end{minipage}
-\hfill 
-\pause
-\begin{minipage}{0.4\textwidth}
-	\vspace{2cm}
-	\begin{figure}[h]
-		\centering
-		\begin{adjustbox}{scale = 1.4}
-			\tikzset{every loop/.style={-{Stealth[scale=1.5]}}}
-			
-			\begin{tikzpicture}[ node distance = 1.3cm and 1cm
-			, on grid 
-			, loop/.append style={-triangle 60}
-			]
-			
-			\node [shape=ellipse,draw=black] (main)                        {main};
-			\node [shape=ellipse,draw=black] (eval) [below =of main]       {eval};
-			\node [shape=ellipse,draw=black] (sum)  [below left =of eval]  {sum};
-			\node [shape=ellipse,draw=black] (upto) [below right =of eval] {upto};
-			
-			\path[-{Stealth[scale=1.5]}] 
-			(main) edge [] (eval)
-			(eval) edge [bend left] (sum)
-			(eval) edge [bend right] (upto)
-			(sum) edge [bend left] (eval)
-			(upto) edge [bend right] (eval);
-			
-			
-			\end{tikzpicture}
-		\end{adjustbox}
-		\label{control-flow-lazy}
-	\end{figure}
-\end{minipage}
+
 \end{frame}
 
 
@@ -168,8 +137,7 @@
 \frametitle{Logikai programozás}
 
   \begin{align*}
-  	\only<1>{\scalebox{1.5}{$c \lor \neg p_1 \lor \neg p_2 \lor \dots \lor \neg p_n$}}
-  	\only<2>{\scalebox{1.5}{$c \leftarrow p_1 \land p_2 \land \dots \land p_n$}}
+  	\scalebox{1.5}{$c \leftarrow p_1 \land p_2 \land \dots \land p_n$}
   \end{align*}
 
 \end{frame}
@@ -485,97 +453,6 @@
 	
 \end{frame}
 
-\begin{frame}
-\frametitle{Termelők és fogyasztók}
-
-\begin{figure}[h]
-\centering
-\begin{adjustbox}{scale = 1.3}
-	\begin{tikzpicture}[ node distance = 1cm and 2cm, on grid ]
-	
-	\node<1> [shape=circle,draw=black] (P1)                 {$P_1$};
-	\node<1> [shape=circle,draw=black] (P2) [right =of P1]  {$P_2$};
-	\coordinate (Middle) at ($(P1)!0.5!(P2)$);
-	\node<1> [shape=circle,draw=black] (C2) [below =of Middle]  {$C_2$};
-	\node<1> [shape=circle,draw=black] (C1) [left =of C2]       {$C_1$};
-	\node<1> [shape=circle,draw=black] (C3) [right =of C2]      {$C_3$};
-	
-	\path<1>[-{Stealth[scale=1.5]}] (P1) edge [] (C1)
-	(P1) edge [] (C2)
-	(P2) edge [] (C2)
-	(P2) edge [] (C3);
-	
-	\pause
-	
-	\node<2,3,4> [shape=circle,draw=black] (P1)                 {\pilcode{upto}};
-	\node [shape=circle,draw=black] (P2) [right =of P1]  {\pilcode{upto}};
-	\coordinate (Middle) at ($(P1)!0.5!(P2)$);
-	\node<2> [shape=circle,draw=black] (C2) [below =of Middle]  {\pilcode{len}};
-	\node<2> [shape=circle,draw=black] (C1) [left =of C2]       {\pilcode{len}};
-	\node<2,3,4,5> [shape=circle,draw=black] (C3) [right =of C2]      {\pilcode{sum}};
-	
-	\path[-{Stealth[scale=1.5]}] (P1) edge [] (C1)
-	(P1) edge [] (C2)
-	(P2) edge [] (C2)
-	(P2) edge [] (C3);
-	
-	\pause 
-	
-	\node<3> [shape=circle,draw=black,fill=green] (C2) [below =of Middle]  {\pilcode{len}};
-	\node<3> [shape=circle,draw=black,fill=green] (C1) [left =of C2]       {\pilcode{len}};
-	\node<3> [shape=circle,draw=black,fill=red]   (C3) [right =of C2]      {\pilcode{sum}};
-	
-	\pause 
-	
-	\node<4,5,6,7,8,9> [shape=circle,draw=black,dashed] (C2) [below =of Middle]  {\pilcode{len}};
-	\node<4,5,6,7,8,9> [shape=circle,draw=black,dashed] (C1) [left =of C2]       {\pilcode{len}};
-	
-	\pause
-	
-	\node<5,6,7,8,9> [shape=circle,draw=black,dashed] (P1)                 {\pilcode{upto}};
-		
-	\pause
-	
-	\node<6,7,8,9> [shape=circle,draw=black,fill=lightgray]   (C3) [right =of C2]      {\pilcode{sum}};
-	
-	\pause 
-	
-	\node<7,8,9> [shape=circle,draw=black,fill=lightgray] (P2) [right =of P1]  {\pilcode{upto}};
-	
-	\pause 
-	
-	\node<8> [shape=circle,draw=black,dashed,fill=lightgray] (C2) [below =of Middle]  {\pilcode{len}};
-	
-	\pause 
-	
-	\node<9> [shape=circle,draw=black,dashed,fill=lightgray] (C2) [below =of Middle]  {\pilcode{len}\Lightning};
-	
-	\pause
-	
-	% first solution is not doing anything
-	
-	\node<10> [shape=circle,draw=black,fill=lightgray] (P1)                 {\pilcode{upto}};
-	\node<10,11> [shape=circle,draw=black,fill=lightgray] (P2) [right =of P1]  {\pilcode{upto}};
-	\node<10,11> [shape=circle,draw=black,fill=lightgray] (C2) [below =of Middle]  {\pilcode{len}};
-	\node<10,11> [shape=circle,draw=black,fill=lightgray] (C1) [left =of C2]       {\pilcode{len}};
-	\node<10,11> [shape=circle,draw=black,fill=lightgray]   (C3) [right =of C2]      {\pilcode{sum}};
-	
-	\pause 
-	
-	% second solution is to keep each C & P's structure as it is, but dummify P1
-	
-	\node<11> [shape=circle,draw=black,fill=yellow] (P1)                 {\pilcode{upto}};
-
-	
-	
-	
-	
-	\end{tikzpicture}
-\end{adjustbox}
-\label{fig:producers-and-consumers}
-\end{figure}
-
-\end{frame}
 
 \section{M\'er\'esi eredm\'enyek}
 
