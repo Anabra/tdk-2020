@@ -1,0 +1,6 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nf}{length} \PYG{k+kt}{:} \PYG{k+kt}{List} \PYG{n}{a} \PYG{o+ow}{\PYGZhy{}\PYGZgt{}} \PYG{k+kt}{Int}
+\PYG{n+nf}{length} \PYG{k+kt}{Nil} \PYG{o+ow}{=} \PYG{l+m+mi}{0}
+\PYG{n+nf}{length} \PYG{p}{(}\PYG{k+kt}{Cons} \PYG{n}{x} \PYG{n}{xs}\PYG{p}{)}
+  \PYG{o+ow}{=} \PYG{l+m+mi}{1} \PYG{o}{+} \PYG{n}{length} \PYG{n}{xs}
+\end{Verbatim}

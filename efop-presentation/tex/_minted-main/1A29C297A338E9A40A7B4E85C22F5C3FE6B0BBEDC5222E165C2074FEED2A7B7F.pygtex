@@ -1,0 +1,16 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n+nf}{eval} \PYG{n}{p} \PYG{o+ow}{=}
+  \PYG{n}{v} \PYG{o+ow}{\PYGZlt{}\PYGZhy{}} \PYG{n}{fetch} \PYG{n}{p}
+  \PYG{k+kr}{case} \PYG{n}{v} \PYG{k+kr}{of}
+    \PYG{p}{(}\PYG{k+kt}{CInt} \PYG{n}{n}\PYG{p}{)}     \PYG{o+ow}{\PYGZhy{}\PYGZgt{}} \PYG{n}{pure} \PYG{n}{v}
+    \PYG{p}{(}\PYG{k+kt}{CNil}\PYG{p}{)}       \PYG{o+ow}{\PYGZhy{}\PYGZgt{}} \PYG{n}{pure} \PYG{n}{v}
+    \PYG{p}{(}\PYG{k+kt}{CCons} \PYG{n}{y} \PYG{n}{ys}\PYG{p}{)} \PYG{o+ow}{\PYGZhy{}\PYGZgt{}} \PYG{n}{pure} \PYG{n}{v}
+    \PYG{p}{(}\PYG{k+kt}{Fupto} \PYG{n}{a} \PYG{n}{b}\PYG{p}{)} \PYG{o+ow}{\PYGZhy{}\PYGZgt{}}
+      \PYG{n}{zs} \PYG{o+ow}{\PYGZlt{}\PYGZhy{}} \PYG{n}{upto} \PYG{n}{a} \PYG{n}{b}
+      \PYG{n}{update} \PYG{n}{p} \PYG{n}{zs}
+      \PYG{n}{pure} \PYG{n}{zs}
+    \PYG{p}{(}\PYG{k+kt}{Fsum} \PYG{n}{c}\PYG{p}{)} \PYG{o+ow}{\PYGZhy{}\PYGZgt{}}
+      \PYG{n}{s} \PYG{o+ow}{\PYGZlt{}\PYGZhy{}} \PYG{n}{sum} \PYG{n}{c}
+      \PYG{n}{update} \PYG{n}{p} \PYG{n}{s}
+      \PYG{n}{pure} \PYG{n}{s}
+\end{Verbatim}
