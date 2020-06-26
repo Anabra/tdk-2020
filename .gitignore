@@ -7,5 +7,6 @@
 *.vrb
 *.out
 *.pygtex
+*.DS_Store
 _minted-main/
 template-en/
