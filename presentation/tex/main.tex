@@ -38,29 +38,6 @@
 
 \section{GRIN \'attekint\'es}
 
-\begin{frame}[fragile]
-	\frametitle{Mi\'ert funkcion\'alis?}
-	
-	\begin{vfitemize}
-		\item Deklarat\'iv
-			\begin{itemize}
-				\item[pro:] magasabb absztrakci\'os szinten val\'o programoz\'as
-			\end{itemize}
-		\item Kompozicionalit\'as \\
-			\begin{itemize}
-				\item[pro:] kis programokat k\"onnyed\'en lehet \"osszeilleszteni
-				\item[con:] sok f\"uggv\'enyh\'iv\'ast eredm\'enyez
-			\end{itemize}
-		\item F\"uggv\'enyek elsőrendű \'ert\'ekk\'ent
-			\begin{itemize}
-				\item[pro:] magasabb rendű függvények
-				\item[con:] ismeretlen függvényhívások
-			\end{itemize}
-	\end{vfitemize}
-
-\end{frame}
-
-
 \begin{frame}
 \frametitle{Graph Reduction Intermediate Notation}
 
@@ -93,98 +70,218 @@
 \end{figure}
 \end{frame}
 
-
 \begin{frame}[fragile]
-\frametitle{Front end kód}
-
-\begin{minipage}{0.35\textwidth}
+	\frametitle{A generált GRIN kód}
 	
-	\begin{haskellcode}
-		main = sum (upto 0 10)
-		
-		upto n m
-		  | n > m = []
-		  | otherwise = n : upto (n+1) m
-		
-		sum []     = 0
-		sum (x:xs) = x + sum xs
-	\end{haskellcode}
-\end{minipage}
-\hfill 
-\pause
-\begin{minipage}{0.4\textwidth}
-	\vspace{2cm}
-	\begin{figure}[h]
-		\centering
-		\begin{adjustbox}{scale = 1.4}
-			\tikzset{every loop/.style={-{Stealth[scale=1.5]}}}
-			
-			\begin{tikzpicture}[ node distance = 1.3cm and 1cm
-			, on grid 
-			, loop/.append style={-triangle 60}
-			]
-			
-			\node [shape=ellipse,draw=black] (main)                        {main};
-			\node [shape=ellipse,draw=black] (eval) [below =of main]       {eval};
-			\node [shape=ellipse,draw=black] (sum)  [below left =of eval]  {sum};
-			\node [shape=ellipse,draw=black] (upto) [below right =of eval] {upto};
-			
-			\path[-{Stealth[scale=1.5]}] 
-			(main) edge [] (eval)
-			(eval) edge [bend left] (sum)
-			(eval) edge [bend right] (upto)
-			(sum) edge [bend left] (eval)
-			(upto) edge [bend right] (eval);
-			
-			
-			\end{tikzpicture}
-		\end{adjustbox}
-		\label{control-flow-lazy}
-	\end{figure}
-\end{minipage}
+	\begin{center}
+		\begin{minipage}{0.40\textwidth}
+			\begin{haskellcode}
+				length : List a -> Int
+				length Nil = 0
+				length (Cons x xs) 
+				  = 1 + length xs
+			\end{haskellcode}
+		\end{minipage}
+		\hfill
+		\pause
+		\begin{minipage}{0.50\textwidth}
+			\begin{overprint}
+				\onslide<2>
+				\begin{haskellcode}
+					length p =
+					  xs <- fetch p
+					  case xs of
+					    (Cons y ys) ->
+					      l1 <- length ys
+					      l2 <- int_add l1 1
+					      pure l2
+					    (Nil) ->
+					  pure 0
+				\end{haskellcode}
+			\end{overprint}
+		\end{minipage}
+	\end{center}
+	
 \end{frame}
 
 
+\section{Strukturális holt-kód eltávolítás szemléltetése}
+
 \begin{frame}[fragile]
-\frametitle{GRIN kód}
-
-\begin{minipage}{0.4\textwidth}
+	\frametitle{Idris példa a transzformációra}
 	
-	\begin{haskellcode}
-		grinMain = 
-		  t1 <- store (CInt 1)
-		  t2 <- store (CInt 10)
-		  t3 <- store (Fupto t1 t2)
-		  t4 <- store (Fsum t3)
-		  (CInt r) <- eval t4
-		  _prim_int_print r
-	\end{haskellcode}
-\end{minipage}
-\hfill
-\begin{minipage}{0.48\textwidth}
-	\vspace{1cm}
-	\begin{haskellcode}
-		eval p = 
-		  v <- fetch p
-		  case v of
-		    (CInt n)     -> pure v
-		    (CNil)       -> pure v
-		    (CCons y ys) -> pure v
-		    (Fupto a b) -> 
-		      zs <- upto a b
-		      update p zs
-		      pure zs
-		    (Fsum c) -> 
-		      s <- sum c
-		      update p s
-		      pure s
-	\end{haskellcode}
-\end{minipage}
-
-
+	\begin{center}
+		\begin{minipage}{0.40\textwidth}
+			\begin{haskellcode}
+				length : List a -> Int
+				length Nil = 0
+				length (Cons x xs) 
+				  = 1 + length xs
+			\end{haskellcode}
+		\end{minipage}
+		\pause
+		$\xRightarrow{\text{DDE}}$
+		\begin{minipage}{0.40\textwidth}
+			\begin{haskellcode}
+				length : List a -> Int
+				length Nil = 0
+				length (Cons xs) 
+				  = 1 + length xs
+			\end{haskellcode}
+		\end{minipage}
+	\end{center}
+	
 \end{frame}
 
-\section{Datalog \'attekint\'es}
+\section{Új szintaxis és Datalog modell} 
+
+\begin{frame}[fragile]
+	\frametitle{A generált GRIN kód (új szintaxis)}
+	
+	\begin{center}
+		\begin{minipage}{0.40\textwidth}
+			\begin{haskellcode}
+				length : List a -> Int
+				length Nil = 0
+				length (Cons x xs) 
+				  = 1 + length xs
+			\end{haskellcode}
+		\end{minipage}
+		\hfill
+		\pause
+		\begin{minipage}{0.50\textwidth}
+			\begin{overprint}
+				\onslide<1>
+				\begin{haskellcode}
+					length p =
+					  xs <- fetch p
+					  case xs of
+					    (Cons y ys) ->
+					      l1 <- length ys
+					      l2 <- int_add l1 1
+					      pure l2
+					    (Nil) ->
+					      pure 0
+				\end{haskellcode}
+				\onslide<2>
+				\begin{haskellcode}
+					length p =
+					  xs <- fetch p
+					  case xs of
+					    (Cons y ys) ->
+					      l1 <- length ys
+					      k1 <- pure 1
+					      l2 <- int_add l1 k1
+					      pure l2
+					    (Nil) ->
+					      k0 <- pure 0
+					      pure k0
+				\end{haskellcode}
+				\onslide<3>
+				\begin{haskellcode}
+					length p =
+					  xs <- fetch p
+					  r <- case xs of
+					    (Cons y ys) ->
+					      l1 <- length ys
+					      k1 <- pure 1
+					      l2 <- int_add l1 k1
+					      pure l2
+					    (Nil) ->
+					      k0 <- pure 0
+					      pure k0
+					  pure r
+				\end{haskellcode}
+				\onslide<4>
+				\begin{haskellcode}
+					length p =
+					  xs <- fetch p
+					  r <- case xs of
+					    (Cons y ys) @ alt1 ->
+					      l1 <- length ys
+					      k1 <- pure 1
+					      l2 <- int_add l1 k1
+					      pure l2
+					    (Nil) @ alt2 ->
+					      k0 <- pure 0
+					      pure k0
+					  pure r
+				\end{haskellcode}
+			\end{overprint}
+		\end{minipage}
+	\end{center}
+	
+\end{frame}
+
+\begin{frame}
+	\frametitle{A GRIN nyelv Datalog modellje (részlet)}
+	\begin{mathpar}
+		\EmissionRule{\Store{p}{n}}
+		{\pilcode{p <- store n}}
+		{ER-Store}
+		\and
+		\EmissionRule{\Fetch{n}{p}}
+		{\pilcode{n <- fetch p}}
+		{ER-Fetch}
+		\and
+		\EmissionRule{\Update{x}{p}{n}}
+		{\pilcode{x <- update p n}}
+		{ER-Update}
+		\and
+		\EmissionRule{\LitAssign{k}{\tau(lit)}{lit}}
+		{\pilcode{k <- pure <lit>}}
+		{ER-Lit}
+		\and
+		\EmissionRule{\Move{y}{x}}
+		{\pilcode{y <- pure x}}
+		{ER-Move}
+	\end{mathpar}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{A GRIN program Datalog reprezentációja}
+	\begin{center}
+		\begin{minipage}{0.50\textwidth}
+			\begin{haskellcode}
+				length p =
+				  xs <- fetch p
+				  r <- case xs of
+				    (Cons y ys) @ alt1 ->
+				      l1 <- length ys
+				      k1 <- pure 1
+				      l2 <- int_add l1 k1
+				      pure l2
+				    (Nil) @ alt2 ->
+				      k0 <- pure 0
+				      pure k0
+				  pure r
+			\end{haskellcode}
+		\end{minipage}
+		\hfill 
+		\pause
+		\begin{minipage}{0.425\textwidth}
+			\vspace{0.5cm}
+			\begin{haskellcode}
+				FunParam(length,0,p)
+				Fetch(xs,p)
+				Case(r,xs)
+				Alt(r,alt1,CCons)
+				AltParam(r,CCons,0,y)
+				AltParam(r,CCons,1,ys)
+				Call(l1,length)
+				CallArgument(l1,0,ys)
+				LitAssign(k1,Int,1)
+				Call(l2,int_add)
+				CallArgument(l2,0,l1)
+				CallArgument(l2,1,k1)
+				ReturnValue(alt1,l2)
+			\end{haskellcode}
+			\dots
+		\end{minipage}
+	\end{center}
+\end{frame}
+
+\section{Created-by és élőségi elemzések}
 
 \begin{frame}
 \frametitle{Logikai programozás}
@@ -197,241 +294,27 @@
 \end{frame}
 
 \begin{frame}
-\frametitle{Egyszerű points-to elemzés Datalog-ban}
+	\frametitle{Points-to elemzés Datalog-ban}
 	\begin{mathpar}
 		\InferRule{\Store{p}{n}}
 		{\Heap{p}{n}}
 		{H-Store}
 		\and
-		\InferRule{\Update{\any}{p}{n}}
-		{\Heap{p}{n}}
-		{H-Update'}
+		\only<1>
+		{
+			\InferRule{\Update{\any}{p}{n}}
+			{\Heap{p}{n}}
+			{H-Update'}
+		}
+		\only<2>
+		{
+			\InferRule{\Update{\any}{p}{n} \\\\
+				\CreatedBy{p}{p'} \\\\
+				\Heap{p'}{\any}}
+			{\Heap{p'}{n}}
+			{H-Update}
+		}
 	\end{mathpar}
-\end{frame}
-
-\begin{frame}
-\frametitle{A GRIN nyelv Datalog modellje (részlet)}
-      \begin{mathpar}
-  	\EmissionRule{\Store{p}{n}}
-  	{\pilcode{p <- store n}}
-  	{ER-Store}
-  	\and
-  	\EmissionRule{\Fetch{n}{p}}
-  	{\pilcode{n <- fetch p}}
-  	{ER-Fetch}
-  	\and
-  	\EmissionRule{\Update{x}{p}{n}}
-  	{\pilcode{x <- update p n}}
-  	{ER-Update}
-  	\and
-  	\EmissionRule{\LitAssign{k}{\tau(lit)}{lit}}
-  	{\pilcode{k <- pure <lit>}}
-  	{ER-Lit}
-  	\and
-  	\EmissionRule{\Move{y}{x}}
-  	{\pilcode{y <- pure x}}
-  	{ER-Move}
-  \end{mathpar}
-\end{frame}
-
-\begin{frame}
-	\frametitle{Valódi points-to elemzés Datalog-ban}
-    \begin{mathpar}
-	\InferRule{\Store{p}{n}}
-	{\Heap{p}{n}}
-	{H-Store}
-	\and
-	\only<1>
-	{
-		\InferRule{\Update{\any}{p}{n}}
-		{\Heap{p}{n}}
-		{H-Update'}
-	}
-	\only<2>
-	{
-		\InferRule{\Update{\any}{p}{n} \\\\
-			\CreatedBy{p}{p'} \\\\
-			\Heap{p'}{\any}}
-		{\Heap{p'}{n}}
-		{H-Update}
-	}
-\end{mathpar}
-\end{frame}
-
-\begin{frame}
-\frametitle{Created-by elemzés (részlet)}
-	\begin{mathpar}
-		\InferRule{\Node{n}{\any}}
-		{\CreatedBy{n}{n}}
-		{C-Node}
-		\and
-		\InferRule{\Store{p}{\any}}
-		{\CreatedBy{p}{p}}
-		{C-Store}
-		\pause
-		\and
-		\InferRule{\Move{v}{n} \\\\
-	    \CreatedBy{n}{n'}}
-		{\CreatedBy{v}{n'}}
-		{C-Move}
-		\and
-		\DatalogRule{\CreatedBy{v}{n'}}
-	    {\Fetch{v}{p} \\\\
-			\CreatedBy{p}{p'} \\\\
-			\Heap{p'}{n} \\\\
-			\CreatedBy{n}{n'}}
-		{C-Fetch}
-	\end{mathpar}
-\end{frame}
-
-\section{Strukturális holt-kód eltávolítás}
-
-\begin{frame}[fragile]
-	\frametitle{Idris példa}
-	
-	\begin{center}
-		\begin{minipage}{0.40\textwidth}
-			\begin{haskellcode}
-            length : List a -> Int
-            length Nil = 0
-            length (Cons x xs) 
-              = 1 + length xs
-			\end{haskellcode}
-		\end{minipage}
-		$\xRightarrow{\text{DDE}}$
-		\pause
-		\begin{minipage}{0.40\textwidth}
-			\begin{haskellcode}
-			length : List a -> Int
-			length Nil = 0
-			length (Cons xs) 
-			  = 1 + length xs
-			\end{haskellcode}
-		\end{minipage}
-	\end{center}
-	
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{A generált GRIN kód}
-
-  \begin{center}
-  	\begin{minipage}{0.40\textwidth}
-  		\begin{haskellcode}
-		length : List a -> Int
-		length Nil = 0
-		length (Cons x xs) 
-		  = 1 + length xs
-  		\end{haskellcode}
-  	\end{minipage}
-  	\hfill
-  	\pause
-  	\begin{minipage}{0.50\textwidth}
-  		\begin{overprint}
-  		\onslide<2>
- 		\begin{haskellcode}
-		length p =
-		  xs <- fetch p
-		  case xs of
-		    (Cons y ys) ->
-		      l1 <- length ys
-		      l2 <- int_add l1 1
-		      pure l2
-		    (Nil) ->
-		      pure 0
-  		\end{haskellcode}
-	  	\onslide<3>
-	  	\begin{haskellcode}
-  		length p =
-  		  xs <- fetch p
-  		  case xs of
-  		    (Cons y ys) ->
-  		      l1 <- length ys
-  		      k1 <- pure 1
-  		      l2 <- int_add l1 k1
-  		      pure l2
-  		    (Nil) ->
-  		      k0 <- pure 0
-  		      pure k0
-  		  pure r
-	  	\end{haskellcode}
-  		\onslide<4>
-  		\begin{haskellcode}
-		length p =
-		  xs <- fetch p
-		  r <- case xs of
-		    (Cons y ys) ->
-		      l1 <- length ys
-		      k1 <- pure 1
-		      l2 <- int_add l1 k1
-		      pure l2
-		    (Nil) ->
-		      k0 <- pure 0
-		      pure k0
-		  pure r
-  		\end{haskellcode}
-  		\onslide<5>
-  		\begin{haskellcode}
-		length p =
-		  xs <- fetch p
-		  r <- case xs of
-		    (Cons y ys) @ alt1 ->
-		      l1 <- length ys
-		      k1 <- pure 1
-		      l2 <- int_add l1 k1
-		      pure l2
-		    (Nil) @ alt2 ->
-		      k0 <- pure 0
-		      pure k0
-		  pure r
-  		\end{haskellcode}
-  	\end{overprint}
-  	\end{minipage}
-  \end{center}
-
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{A GRIN program Datalog reprezentációja}
-\begin{center}
-	\begin{minipage}{0.50\textwidth}
-		\begin{haskellcode}
-		length p =
-		  xs <- fetch p
-		  r <- case xs of
-		    (Cons y ys) @ alt1 ->
-		      l1 <- length ys
-		      k1 <- pure 1
-		      l2 <- int_add l1 k1
-		      pure l2
-		    (Nil) @ alt2 ->
-		      k0 <- pure 0
-		      pure k0
-		  pure r
-		\end{haskellcode}
-	\end{minipage}
-	\hfill 
-	\pause
-	\begin{minipage}{0.425\textwidth}
-		\vspace{0.5cm}
-		\begin{haskellcode}
-        FunParam(length,0,p)
-        Fetch(xs,p)
-        Case(r,xs)
-        Alt(r,alt1,CCons)
-        AltParam(r,CCons,0,y)
-        AltParam(r,CCons,1,ys)
-        Call(l1,length)
-        CallArgument(l1,0,ys)
-        LitAssign(k1,Int,1)
-        Call(l2,int_add)
-        CallArgument(l2,0,l1)
-        CallArgument(l2,1,k1)
-        ReturnValue(alt1,l2)
-		\end{haskellcode}
-		\dots
-	\end{minipage}
-\end{center}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -458,59 +341,105 @@
 	\end{minipage}
 	\hfill
 	\begin{minipage}{0.475\textwidth}
-		\begin{tcolorbox}[tab2,tabularx={l|r}]
-			Var			  & Producers \\
-			\hline\hline
-			\pilcode{p}   & \dots \\\hline
-			\pilcode{y}   & \dots \\\hline
-			\pilcode{xs}  & $Nil[\dots], Cons[\dots]$ \\\hline
-			\pilcode{ys}  & $Nil[\dots], Cons[\dots]$ \\\hline\hline
-			\pilcode{l1}  & $\{l2,k0\}$	\\\hline
-			\pilcode{k1}  & $\{k1\}$ \\\hline
-			\pilcode{l2}  & $\{l2\}$ \\\hline
-			\pilcode{k0}  & $\{k0\}$ \\\hline
-			\pilcode{r}   & $\{l2,k0\}$	\\
-		\end{tcolorbox}
+		\only<2>
+		{	
+			\begin{tcolorbox}[tab2,tabularx={l|r}]
+				Var			  & Producers \\
+				\hline\hline
+				\pilcode{p}   &  \\\hline
+				\pilcode{y}   &  \\\hline
+				\pilcode{xs}  &  \\\hline
+				\pilcode{ys}  &  \\\hline\hline
+				\pilcode{l1}  & 	\\\hline
+				\pilcode{k1}  &  \\\hline
+				\pilcode{l2}  &  \\\hline
+				\pilcode{k0}  &  \\\hline
+				\pilcode{r}   & 	\\
+			\end{tcolorbox}
+		}
+		\only<3>
+		{	
+			\begin{tcolorbox}[tab2,tabularx={l|r}]
+				Var			  & Producers \\
+				\hline\hline
+				\pilcode{p}   & \dots \\\hline
+				\pilcode{y}   & \dots \\\hline
+				\pilcode{xs}  & \dots \\\hline
+				\pilcode{ys}  & \dots \\\hline\hline
+				\pilcode{l1}  & 	\\\hline
+				\pilcode{k1}  &  \\\hline
+				\pilcode{l2}  &  \\\hline
+				\pilcode{k0}  &  \\\hline
+				\pilcode{r}   & 	\\
+			\end{tcolorbox}
+		}
+		\only<4>
+		{	
+			\begin{tcolorbox}[tab2,tabularx={l|r}]
+				Var			  & Producers \\
+				\hline\hline
+				\pilcode{p}   & \dots \\\hline
+				\pilcode{y}   & \dots \\\hline
+				\pilcode{xs}  & \dots \\\hline
+				\pilcode{ys}  & \dots \\\hline\hline
+				\pilcode{l1}  & 	\\\hline
+				\pilcode{k1}  & $\{k1\}$ \\\hline
+				\pilcode{l2}  &  \\\hline
+				\pilcode{k0}  & $\{k0\}$ \\\hline
+				\pilcode{r}   & 	\\
+			\end{tcolorbox}
+		}
+		\only<5>
+		{	
+			\begin{tcolorbox}[tab2,tabularx={l|r}]
+				Var			  & Producers \\
+				\hline\hline
+				\pilcode{p}   & \dots \\\hline
+				\pilcode{y}   & \dots \\\hline
+				\pilcode{xs}  & \dots\\\hline
+				\pilcode{ys}  & \dots \\\hline\hline
+				\pilcode{l1}  & \\\hline
+				\pilcode{k1}  & $\{k1\}$ \\\hline
+				\pilcode{l2}  & $\{l2\}$ \\\hline
+				\pilcode{k0}  & $\{k0\}$ \\\hline
+				\pilcode{r}   & \\
+			\end{tcolorbox}
+		}
+		\only<6>
+		{	
+			\begin{tcolorbox}[tab2,tabularx={l|r}]
+				Var			  & Producers \\
+				\hline\hline
+				\pilcode{p}   & \dots \\\hline
+				\pilcode{y}   & \dots \\\hline
+				\pilcode{xs}  & \dots\\\hline
+				\pilcode{ys}  & \dots \\\hline\hline
+				\pilcode{l1}  & \\\hline
+				\pilcode{k1}  & $\{k1\}$ \\\hline
+				\pilcode{l2}  & $\{l2\}$ \\\hline
+				\pilcode{k0}  & $\{k0\}$ \\\hline
+				\pilcode{r}   & $\{l2,k0\}$	\\
+			\end{tcolorbox}
+		}
+		\only<7>
+		{	
+			\begin{tcolorbox}[tab2,tabularx={l|r}]
+				Var			  & Producers \\
+				\hline\hline
+				\pilcode{p}   & \dots \\\hline
+				\pilcode{y}   & \dots \\\hline
+				\pilcode{xs}  & \dots\\\hline
+				\pilcode{ys}  & \dots \\\hline\hline
+				\pilcode{l1}  & $\{l2,k0\}$	\\\hline
+				\pilcode{k1}  & $\{k1\}$ \\\hline
+				\pilcode{l2}  & $\{l2\}$ \\\hline
+				\pilcode{k0}  & $\{k0\}$ \\\hline
+				\pilcode{r}   & $\{l2,k0\}$	\\
+			\end{tcolorbox}
+		}
 	\end{minipage}
 \end{center}
 
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Élőségi elemzés forrásai}
-	\begin{mathpar}
-		\DatalogRule{\LiveSVal{x}}
-		{\EntryPoint{main} \\\\
-			\ReturnValue{main}{x}}
-		{LS-Entry}
-		\and
-		\DatalogRule{\LiveSVal{x}}
-		{\Call{y}{f} \\\\
-			\CallArgument{y}{\any}{x} \\\\
-			\External{f}{true}{\any}}
-		{LS-Ext}
-	\end{mathpar}
-\end{frame}
-
-\begin{frame}[fragile]
-	\frametitle{Élőségi elemzés egyéb szabályai (részlet)}
-	\begin{mathpar}
-	\DatalogRule{\LiveSVal{x}}
-	{\LiveSVal{y} \\\\
-		\Move{y}{x}}
-	{LS-Move}
-	\and
-	\DatalogRule{\LiveSVal{x}}
-	{\LiveNodeArg{n}{t}{i} \\\\
-		\Node{n}{t} \\\\
-		\NodeArgument{n}{i}{x}}
-	{LS-NodeArg}
-   \and
-	\DatalogRule{\LiveFunRetSimple{f}}
-	{\LiveSVal{y} \\\\
-		\Call{y}{f}}
-	{LFS-FunRet}
-	\end{mathpar}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -660,6 +589,34 @@
 				\pilcode{k0}  & $\top$ \\\hline
 				\pilcode{r}   & $\top (feltetelezes)$	\\
 			\end{tcolorbox}
+		\end{minipage}
+	\end{center}
+	
+\end{frame}
+
+\section{Strukturális holt-kód eltávolítás}
+
+\begin{frame}[fragile]
+	\frametitle{Idris példa a transzformációra}
+	
+	\begin{center}
+		\begin{minipage}{0.40\textwidth}
+			\begin{haskellcode}
+				length : List a -> Int
+				length Nil = 0
+				length (Cons x xs) 
+				  = 1 + length xs
+			\end{haskellcode}
+		\end{minipage}
+	    \pause
+		$\xRightarrow{\text{DDE}}$
+		\begin{minipage}{0.40\textwidth}
+			\begin{haskellcode}
+				length : List a -> Int
+				length Nil = 0
+				length (Cons xs) 
+				  = 1 + length xs
+			\end{haskellcode}
 		\end{minipage}
 	\end{center}
 	
@@ -880,6 +837,22 @@
 			\item a rendszer jól működik függőtípusos nyelvekre is
 			\item az optimalizált GRIN kód jelentősen hatékonyabb
 			\item a GRIN optimalizációk ortogonálisak az LLVM optimalizációkra
+		\end{itemize}
+	\end{vfitemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Publikációk, előadások}
+	\begin{vfitemize}
+		\item Publikációk:
+		\begin{itemize}
+			\item ActaCybernetica
+		\end{itemize}
+		\item Előadások:
+		\begin{itemize}
+			\item EUTypes 2019
+			\item Midlands Graduate School 2019
+			\item London Haskell Meetup 2019
 		\end{itemize}
 	\end{vfitemize}
 \end{frame}
